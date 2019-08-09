@@ -1,0 +1,86 @@
+%!TEX root = ../main.tex
+
+\section{Hash Function}
+\comment{Repetition from DAT510}
+
+\question{Do you remember what a hash function is?}
+\question{What is the most common use case for not cryptographic a hash function?}
+
+\begin{definition}
+	A (cryptographic) \textbf{hash function} $H$ $(H(x) \mapsto y)$ is a \emph{deterministic} function that maps inputs ($x$) of arbitrary size to "small" outputs ($y$), e.g. 256 bit numbers.
+\end{definition}
+ 
+\begin{note}
+The idea for a hash function is that the result should "look" random. 
+However the function is \emph{deterministic}, i.e. the same input always results in the same output.
+\end{note}
+
+\begin{note}
+A mental image for a hash function is the following:
+
+Imagine a gnome that lives in a closed box. When you give a new peace of text to the gnome, he writes down the text, roles some dice and gives you a random number for your text.
+
+When given the next peace of text, the gnome will look up if he has seen this text before. If yes, he will return the number from before. If no, he roles the dice and gives you a new number.
+\end{note}
+\question{Do there exist two $x$ that have the same hash value?}
+\question{Assume hashes are 4-bits. Can you find a string or text that has the hash value? How long will it take?}
+
+\begin{example}
+Example for hash functions are
+
+\begin{description}
+	\item[MD5] not secure
+	\item[SHA-1] not secure
+	\item[SHA-2] actually SHA-256 and SHA-512 give 256 and 512 bit output.
+	\item[SHA-3] standard from 2015
+\end{description}
+
+On unix terminal (also mac) compute SHA-256 of a file
+\begin{verbatim}
+shasum -a 256 file.txt	
+\end{verbatim}
+or
+\begin{verbatim}
+	printf "hello world" | shasum -a 256
+\end{verbatim}
+Hashes here are given in hexadecimal numbers.
+\end{example}
+
+
+\question{With hexadecimal numbers, how many characters are needed to represent a 64 bit hash?}
+\comment{ use echo -n "hash" 
+(pipe) wc -c	
+ to count characters = 64}
+
+
+
+\begin{definition}
+	For a secure hash function the following security properties need to hold:
+	\begin{description}
+		\item[Pre-image resistance] (one way) Given a d-bit $y$ it is infeasible to find any $x$ such that $y= H(x)$
+		\item[Weak collision resistance] Given an input $x$ it is infeasible to find a different $x'$ such that $H(x) = H(x')$.
+		\item[Collision resistance] It is infeasible to find inputs $x$ and $x'$
+		such that $x \neq x'$ and $H(x)=H(x')$.
+	\end{description}
+	\emph{Infeasibility} means that an exhaustive search is the best strategy to find such values and the probability to find an $x$ as above is smaller than $\frac{1}{2^{112}}$
+\end{definition}
+
+\question{Which property is hardest to get? -> Birthday paradox with dice.}
+\question{Think of examples how to use a cryptographic secure hash function?}
+
+\begin{example}
+Examples for the use of cryptographic hash functions are:
+\begin{itemize}
+	\item Including hashes of third party content in HTML-tags, e.g. scripts.
+	\item Not storing user passwords in plain text.
+\end{itemize}
+\end{example}
+
+\question{Given a secure hash functions, how can we define a large number of secure hash functions and randomly select one of them? E.g. a different hash function for every user of a website.}
+
+\begin{note}
+Given a secure hash function $H$ that takes strings as input, we can create a hash function $H'$ that takes lists, structs or byte arrays as input.
+
+For pre-image resistance to be useful, the domain of structs should be large and structs should be unpredictable.
+\end{note}
+\comment{English has about 150 000 words in use. Random 4 letter combinations are more than 400 000.}
