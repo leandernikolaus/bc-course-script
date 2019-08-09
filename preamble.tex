@@ -1,9 +1,12 @@
+%!TEX root = ./main.tex
+
 \usepackage{amsmath}
 \usepackage{amssymb}
 
 \usepackage[obeyDraft]{todonotes}
 
-\newcommand{\question}[1]{\todo[color=green!40,inline]{\textbf{Question}: #1}}
+\newcommand{\question}[1]{\todo[color=green!40,inline, caption={2do}]{
+\begin{minipage}{\textwidth-4pt}\textbf{Question}: #1\end{minipage}}}
 \newcommand{\comment}[1]{\todo[color=white,inline]{#1}}
 
 

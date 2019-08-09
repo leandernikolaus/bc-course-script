@@ -10,9 +10,9 @@ Every block $b$ contains a pointer $b.prev$ to a preceding bock and a field $b.h
 that contains the hash of the block referenced by $b.prev$.
 A block also contains a data item $b.data$.
 
-The hash of a block is computed as $b.h_{-1}=H(b.prev.h_{-1} || b.prev.data)$
+The hash of a block $b$ is computed as $H(b)= H(b.h_{-1} || b.prev.data)$.
 
-There exist one block $b_0$, for which $b.prev$ is empty. 
+There exist one block $b_0$, for which $b.prev$ is empty.
 
 For to block $b$ and $b'$, if $b.prev=b'$ we say that $b$ is a successor of $b'$.
 
@@ -25,3 +25,22 @@ A \textbf{hash-chain} is a hash-tree, where every block has at most one successo
 The blocks in a hash-chain can be linearly ordered according to the successor relation with the block $b_0$ as the first block.
 \end{lem}
 
+\question{Given a hash chain $b_0, b_1, b_2, ..., b_n$ which of the following is infeasible.
+\begin{itemize}
+	\item Create an alternative hash chain $b'_0, b_1, b'_2, ... ,b'_n$ 
+	such that $b'_i=b_i$ for $i<3$ and $b'_3 \neq b_3$.
+	\item Create an alternative hash chain $b'_0, b_1, b'_2, ... ,b'_n$ such that $b'_n=b_n$ and $b'_1 \neq b_1$.
+	\item Create an alternative hash chain $b'_0, b_1, b'_2$ such that $b'_2=b_1$.
+	\item Create an alternative hash chain $b'_0, b_1, b'_2, ... ,b'_n, b'_{n+1}$ such that $b'_{n+1}=b_n$.
+	\item Assume $n$ is very large, but no $b_i$ has $b_i.data = "hello world"$.
+	Create $b'$, s.t., for some $i\leq n$ $H(b')=H(b_i)$ and $b'.data="hello world"$
+\end{itemize}
+Why?}
+
+\begin{example}
+Assume a notary maintains, on its homepage a hash-chain of the hashes of all documents it has signed. 
+\begin{itemize}
+	\item This allows document holders to proof that their document was signed.
+	\item This allows to document holders to proof which document was signed first.
+\end{itemize}
+\end{example}
