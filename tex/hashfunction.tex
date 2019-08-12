@@ -83,4 +83,16 @@ Given a secure hash function $H$ that takes strings as input, we can create a ha
 
 For pre-image resistance to be useful, the domain of structs should be large and structs should be unpredictable.
 \end{note}
+
 \comment{English has about 150 000 words in use. Random 4 letter combinations are more than 400 000.}
+
+
+\begin{note}
+Given a hash function $H: \mathcal{X} \rightarrow \mathcal{Y}$ that hashes strings (or byte slices) we can create a hash function $H: \mathcal{X} \times \mathcal{X} \rightarrow \mathcal{Y}$ by concatenating the inputs.
+
+We write $x_1|| x_2$ for the concatenation of inputs $x_1$ and $x_2$.
+Note that the resulting hash function is not commutative.
+\[
+H(x_1||x_2) \neq H(x_2|| x_1)
+\]
+\end{note}
