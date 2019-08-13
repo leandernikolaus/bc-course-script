@@ -49,6 +49,14 @@ To check the proof, recompute $h_{3,4}$ and $h_{1,2,3,4}$.
 If $h_r$ is the root of a Merkle Tree with $n$ data elements, it is possible to proof that $D_i$ is one of the data elements by revealing $D_i$ and $log(n)$ node labels, i.e., hashes.
 \end{lem}
 
+\question{What is needed to recompute hashes on a path in the Merkle Tree?
+\begin{itemize}
+	\item Data position or
+	\item Left/right information
+\end{itemize}}
+
+\question{How many hashes does an inclusion proof contain for a Tree with 3,8,12 or 24 data items?}
+
 \begin{example}
 	In a Merkle Tree with 16 data elements, an inclusion proof contains 4 hashes.
 	
@@ -58,3 +66,4 @@ If $h_r$ is the root of a Merkle Tree with $n$ data elements, it is possible to 
 \end{example}
 
 \question{Is it possible to proof that a certain document or peace of data is not included in the Merkle Tree?}
+
