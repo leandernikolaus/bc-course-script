@@ -45,6 +45,11 @@ To check the proof, recompute $h_{3,4}$ and $h_{1,2,3,4}$.
 	\end{itemize}
 \end{definition}
 
+\begin{figure}[ht]
+	\includegraphics[width=\linewidth]{fig/merkletree}
+	\caption{Merkle tree with root $h_{1,2,3,4}$}
+\end{figure}
+
 \begin{lem}
 If $h_r$ is the root of a Merkle Tree with $n$ data elements, it is possible to proof that $D_i$ is one of the data elements by revealing $D_i$ and $log(n)$ node labels, i.e., hashes.
 \end{lem}
@@ -54,6 +59,11 @@ If $h_r$ is the root of a Merkle Tree with $n$ data elements, it is possible to 
 	\item Data position or
 	\item Left/right information
 \end{itemize}}
+
+\begin{figure}[ht]
+	\includegraphics[width=\linewidth]{fig/merkleproof}
+	\caption{Hashes necessary and computed to proof inclusion for $D_3$.}
+\end{figure}
 
 \question{How many hashes does an inclusion proof contain for a Tree with 3,8,12 or 24 data items?}
 
@@ -67,3 +77,11 @@ If $h_r$ is the root of a Merkle Tree with $n$ data elements, it is possible to 
 
 \question{Is it possible to proof that a certain document or peace of data is not included in the Merkle Tree?}
 
+\begin{note}
+It is possible to enhance other tree data-structures, e.g. binary search tree or radix tree with hashes from a Merkle tree.
+\end{note}
+
+\begin{figure}[ht]
+	\includegraphics[width=\textwidth]{fig/binarySearchTree}
+	\caption{A binary search tree enhanced with hash references.}
+\end{figure}

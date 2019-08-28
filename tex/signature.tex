@@ -1,0 +1,218 @@
+%!TEX root = ../main.tex
+
+\section{Digital Signatures}
+A short recap of digital signatures.
+
+A signature scheme comprises key generation, signing and verification functions.
+Key generation creates a public and secret (private) key pair ($pk, sk$).
+
+Signing function takes an arbitrary message $m$ and the secret key $sk$ and outputs a signature $\sigma$.
+\[
+\sigma\leftarrow Sign(m,sk)
+\]
+
+A verify function takes a message $m$, signature $\sigma$ and the public key $pk$. The verification function returns $\true$, if $\sigma$ was produced for $m$ with the secret key $sk$ matching $pk$. Otherwise verification returns \false.
+\[
+\{ \true, \false \} \leftarrow Verify(m,\sigma,pk)
+\]
+
+Bitcoin currently uses ECDSA signatures, i.e. signatures where the public key is a point on an elliptic curve.
+
+\section{Account balances and UTXO}
+The most prominent use case for blockchains is currently digital currency. 
+We now spend some time to look at how to implement money transfer. 
+
+\question{How would you implement a digital bank?}
+
+\begin{idea}
+	\label{idea-pk}
+	We can use public keys as identity for users or owners of money. 
+\end{idea}
+\begin{note}
+Idea~\ref{idea-pk} allows to avoid the use of \emph{public key infrastructure} (PKI), that is otherwise used to bind public keys to identities.
+\end{note}
+
+\textbf{Algorithm~\ref{alg:bank}} show a simple bank that maintains balances.
+The algorithm has two transactions, \textsc{Create} creates new balances.
+\textsc{Transfer} allows to transfer money from one account to another.
+The algorithm assumes that balances that have not been initialized have the value 0.
+
+
+\textbf{Authentication} of transactions poses a problem:
+\begin{itemize}
+	\item For \textsc{Create} transactions we assume that they are are only valid during setup of the system.
+	\item For \textsc{Transfer} transactions it is desired that all transactions can be submitted by users. E.g. if balances are identified with a public key, we could require transactions to be signed by the owner of \textit{pk-from}.
+\end{itemize}
+
+\noindent
+A bank based on Algorithm~\ref{alg:bank} may be susceptible to \textbf{replay attacks}. A \textsc{Transfer} transaction signed by \textit{pk-from} may be submitted multiple times, given that the account of \textit{pk-from} has sufficient fonds. This will result in additional fonds transferred to \textit{pk-to}.
+
+\begin{algorithm}[ht!]
+	\caption{Simple Bank using account balances}
+	\label{alg:bank}
+	\begin{algorithmic}
+		\State{$balances :=[pk]\textnormal{uint}$}
+		\Procedure{Create}{$value, pk$}
+			
+				\State{$balances[pk] += value$}
+			
+		\EndProcedure
+		\Procedure{Transfer}{$value, \textit{pk-from}, \textit{pk-to}$}
+			\If{$balances[\textit{pk-from}] > value$ }
+				\State{$balances[\textit{pk-from}] -= value$}
+				\State{$balances[\textit{pk-to}] += value$}
+			\EndIf
+		\EndProcedure
+	\end{algorithmic}
+\end{algorithm}
+
+\question{How could you implement this bank using a blockchain?}
+
+\begin{note}
+In a centralized system, a trusted party could process transactions, compute balances and distribute balances to all parties. 
+
+Without a trusted party, it is necessary that transactions are distributed to everybody. Every party can then deterministically compute the balances.
+
+One problem in this model is how to role back transactions.
+\end{note}
+
+\subsection{UTXO}
+We now explain the \emph{unspent transaction output} (UTXO) model. 
+
+\begin{idea}[UTXO]
+The main idea behind the \emph{UTXO} model is that, given a record of transactions, validating that a certain balance is greater than $value$ is the same as verifying that this account has received $value$ funds that have not been spend yet.
+
+Note that it is usually not necessary to look at all transactions received by the sender, but only a subset. The \emph{UTXO} model allows the transaction to specify the subset we should look at.
+\end{idea}
+
+\begin{definition}
+	A \textbf{transaction output} is a tuple $(v, pk)$ that shows, that $v$ funds have been transferred. $pk$ is a \emph{spending condition} that must be met to spend claim $v$. Typically $pk$ requires a signature with a given public key.
+	
+	A \textbf{transaction input} is a tuple consisting of a reference to a transaction output and an argument that meets the outputs condition.
+	I.e. $(outp_i,\sigma)$ where $\sigma$ is \emph{redeeming argument} a matching $pk$, e.g. a signature.
+	
+	A \textbf{transaction} is a tuple containing a list of transaction inputs and a list of new outputs.
+\end{definition}
+
+
+\begin{note}
+	\label{bitcoin:transactions}
+	In bitcoin transactions are implemented in the following way:
+	\begin{itemize}
+		\item An output from transaction $t$ is identified by a tuple $(h_t,i)$,
+		where $h_t$ is the hash of $t$ and $i$ is the index in the list of outputs in $t$.
+		\item Algorithm~\ref{alg:transact} shows how a transaction is validated.
+		For a transaction to be valid, \emph{all inputs must be unspent}, input \emph{signatures must validate} and the \emph{sum of input values must be larger than the  output values}.
+		\item Algorithm~\ref{alg:transact} ensures that a transaction can only be validated once and no two valid transactions can spend the same output.
+		\item The different between transaction inputs and outputs is called transaction \emph{fee}.
+		\item Example~\ref{ex:P2PKH} gives an example for more complex conditions that may be required to spend an output.
+		\item When the value of inputs is larger than the desired value to be spend, it is common to create an additional output that contains change.
+	\end{itemize}
+	
+\end{note}
+
+\begin{algorithm}[h!]
+	\caption{Transaction validation and maintenance of UTXO}
+	\label{alg:transact}
+	\begin{algorithmic}
+		\State{$UTXO := map[(h,i)]\rightarrow(value, pk)$}
+		\Procedure{transfer}{$inputs, outputs$}\Comment{Transaction $t$ with hash $h_t$}
+			\For{$((h,i),\sigma)\in inputs$}
+				\If{$UTXO[(h,i)]$ does not exist}
+					\State{\textbf{abort}}
+					\Comment{invalid transaction}
+				\EndIf
+				\If{$\text{verify}(h_t,\sigma, UTXO[(h,i)].pk) == \false$}
+					\State{\textbf{abort}}
+					\Comment{invalid transaction}
+				\EndIf
+			\EndFor
+			\If{ sum of values of inputs $<$ sum of values of new outputs}
+				\State{\textbf{abort}}
+				\Comment{invalid transaction}
+			\EndIf
+			
+			\For{$((h,i),\sigma)\in inputs$}
+				\State{$UTXO[(h,i)]=nil$} \Comment{output spent}
+			\EndFor
+			\State{$h_t:= hash(transaction)$}
+			\State{$UTXO[h_t]=outputs$}
+			\Comment{add new output}
+			
+			
+		\EndProcedure
+	\end{algorithmic}
+\end{algorithm}
+
+
+\begin{definition}
+A \emph{double-spend} is a situation where multiple transactions attempt to spend the same output. 	
+\end{definition}
+\begin{note}
+Note that according to Algorithm~\ref{alg:transact} only one of double-spend transactions can be validated. 
+\end{note}
+
+\pagebreak
+
+
+\begin{example}
+	\label{ex:P2PKH}
+	The most common examples for arguments necessary to claim a transaction output are listed here. In Bitcoin they are expressed in a stack based scripting language.
+	\begin{enumerate}[label=\alph*)]
+		\item A signature that matches a certain public key.
+		\item A public key that hashes to a certain value and a signature that matches this key. (Pay to public key hash or P2PKH).
+		\item Multiple signatures that match a sequence of public keys. (Multisig)
+		\item Multiple signatures that match $m$ out of $n$ provided public keys.
+		\item A script that hashes to a certain value and an argument that causes this script to evaluate to true. (pay to script hash)
+	\end{enumerate}
+	See \href{https://github.com/bitcoinbook/bitcoinbook/blob/develop/ch06.asciidoc#P2PubKHash1}{here} and \href{https://github.com/bitcoinbook/bitcoinbook/blob/develop/ch06.asciidoc#scriptSig_and_scriptPubKey}{here} for explanation of P2PKH script.
+\end{example}
+
+\begin{note}
+To maintain a copy of our transaction based bank, a node has to maintain the set of all unspent transaction outputs $UTXO$. 
+
+If variant b) is used instead of variant a) from Example~\ref{ex:P2PKH} this may significantly reduce the size of the $UTXO$ data structure. The same holds, if d) is used instead of c).
+\end{note}	
+
+\comment{On blackboard, give example of P2PKH script.}
+
+\begin{definition} An \textbf{address} is either a public key or the hash of a public key. Given the address of a user, it is possible to transfer funds to this user, i.e. create an output that this user can claim by providing a correct signature.
+\end{definition}
+
+\begin{note}
+Bitcoin and many other cryptocurrencies use Base-58 encoding. This encoding uses small and large letters (a to z) and numbers, omitting 0 (number zero), O (capital o), l (lower L) and I (capital i) because of their ambiguity.
+
+Bitcoin addresses use Base58Check encoding adds a 4 byte checksum before Base-58 encoding, to protect against typos, ...
+\end{note}
+
+
+\subsection{Privacy in the UTXO model}
+\comment{Not covered in lecture}
+Different from the account and balance system, the $UTXO$ model encourages the use of different addresses. This makes it harder to identify all transactions done by a single user.
+
+However research has shown, that based on transactions, it is easy to identify different addresses belonging to the same user.
+
+On the other hand, $UTXO$ allows to trace in which transactions a particular value or coin was involved.
+
+\begin{definition}
+A \textbf{tainted coin} is a transaction output that is either the result of a transaction considered unethical or illegal or derived from the output of such a transaction by multiple other transactions.
+\end{definition}
+
+\begin{note}
+Based on the concept of tainted coins it is debatable whether digital cash based on the UTXO model is \emph{fungible}. In economics fungibility is defined as the property that any two units of a good are interchangeable.
+\end{note}
+
+\question{What about paper money? Is it fungible?}
+
+The UTXO model allows to create a mixing service:
+\begin{definition}
+	A \emph{mixing service} can be used to prevent a third party from tracking a specific users transactions. A mixing service would receive payments from many users, and pay them back using new addresses. 
+\end{definition}
+
+\begin{note}
+	\begin{itemize}
+		\item A mixing service makes it hard to see which of the new addresses belongs to which of the users that sent money to the mixing service.
+		\item A mixing service usually requires a high fee.
+		\item A mixing service is usually implemented as a centralized entity.
+	\end{itemize}
+\end{note}

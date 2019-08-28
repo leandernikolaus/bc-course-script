@@ -1,0 +1,15 @@
+%!TEX root = ../main.tex
+
+\section{Blockchain}
+The following blockchain definition combines hash-chain with Merkle trees. 
+
+
+\begin{definition}\label{def:bc}
+A \textbf{Blockchain} is a hash-chain where the data entry in every node is the root of a Merkle tree.
+\end{definition}
+
+\begin{note}
+	The blockchain construction was not invented for bitcoin. It is used previously in \emph{linked timestamping}, where block headers are published in newspapers.
+\end{note}
+
+\question{If the last block header of a blockchain is published, what is necessary to prove that a $D_i$ was data, included in the Merkle tree of the previous block?}

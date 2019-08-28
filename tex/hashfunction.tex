@@ -30,10 +30,14 @@ Example for hash functions are
 
 \begin{description}
 	\item[MD5] not secure
+	\item[RIPEMD-160] outputs 160 bits - not secure
 	\item[SHA-1] not secure
 	\item[SHA-2] actually SHA-256 and SHA-512 give 256 and 512 bit output.
 	\item[SHA-3] standard from 2015
 \end{description}
+
+% Security summary at \href{https://en.wikipedia.org/wiki/Hash_function_security_summary}
+% % {Wikipedia: Hash function security summary}.
 
 On unix terminal (also mac) compute SHA-256 of a file
 \begin{verbatim}
@@ -45,9 +49,12 @@ or
 \end{verbatim}
 Hashes here are given in hexadecimal numbers.
 \end{example}
+\noindent
+Security summary at\\ \url{https://en.wikipedia.org/wiki/Hash_function_security_summary}
 
 
-\question{With hexadecimal numbers, how many characters are needed to represent a 64 bit hash?}
+
+\question{With hexadecimal numbers, how many characters are needed to represent a 256 bit hash?}
 \comment{ use echo -n "hash" 
 (pipe) wc -c	
  to count characters = 64}
@@ -65,7 +72,9 @@ Hashes here are given in hexadecimal numbers.
 	\emph{Infeasibility} means that an exhaustive search is the best strategy to find such values and the probability to find an $x$ as above is smaller than $\frac{1}{2^{112}}$
 \end{definition}
 
-\question{Which property is hardest to get? -> Birthday paradox with dice.}
+\question{Which property is hardest to get? Birthday paradox with dice.
+}
+\comment{Collision resistance is most difficult. Requires double the size, compared to the others.}
 \question{Think of examples how to use a cryptographic secure hash function?}
 
 \begin{example}
@@ -79,9 +88,12 @@ Examples for the use of cryptographic hash functions are:
 \question{Given a secure hash functions, how can we define a large number of secure hash functions and randomly select one of them? E.g. a different hash function for every user of a website.}
 
 \begin{note}
-Given a secure hash function $H$ that takes strings as input, we can create a hash function $H'$ that takes lists, structs or byte arrays as input.
+	\begin{enumerate}[label=\alph*)]
+		\item Given a secure hash function $H$ that takes strings as input, we can create a hash function $H'$ that takes lists, structs or byte arrays as input.
+		\item For pre-image resistance to be useful, the domain of structs should be large and structs should be unpredictable.
+		\item Given a secure hash function $H$ we can create a family of hash functions $H_i$ by concatenating a number or letter $i$ to the input of $H$ $H_i(x)=H(x||i)$. We can choose $i$ at random.
+	\end{enumerate}
 
-For pre-image resistance to be useful, the domain of structs should be large and structs should be unpredictable.
 \end{note}
 
 \comment{English has about 150 000 words in use. Random 4 letter combinations are more than 400 000.}
