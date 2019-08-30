@@ -184,6 +184,7 @@ When the sum of outputs of a transaction is larger than the sum of inputs, the d
 		\item The mining reward allows cheap transactions, since fees do not need to cover full mining expenses.
 		\item Some research suggests, that if mining rewards are small compared to fees, mining becomes unstable.\footnote{\url{https://freedom-to-tinker.com/2016/10/21/bitcoin-is-unstable-without-the-block-reward/}}
 		\item Mining awards are necessary to get money into circulation.
+		\item Currently in bitcoin mining rewards are 12.5 bitcoin, while fees per block are less than 1 bitcoin.
 	\end{itemize}
 \end{note}
 
@@ -208,7 +209,7 @@ A fork is problematic since the different blocks or chains represent two version
 	
 \emph{Imagine your bank being undecided, wether you did or did not payed your rent.}
 
-\begin{definition} (Longest chain rule) If a fork exist should adopt the longest chain.
+\begin{definition} (Longest chain rule) If a fork exists all nodes should adopt the longest chain.
 \end{definition}
 
 \begin{note} While the Longest chain rule is implemented in the standard bitcoin release, it is not enforced. It is possible to extend a different chain than the given by the longest chain rule. Doing this may change what is the longest chain. 
@@ -228,8 +229,33 @@ Assume two chains $c_1$ and $c_2$ where $c_1$ is longer than $c_2$. Further assu
 Chain $c_1$ is already longer than $c_2$. A new block would make $c_1$ even longer, while it would make $c_2$ at most equally long to $c_1$.
 \end{proof}
 
+\begin{figure}
+	
+	\includegraphics[width=\textwidth]{fig/fork}
+	\caption{A fork in the blockchain. Two blocks extending $b_2$ where found.}
+	\label{fig:fork}
+\end{figure}
+
+\begin{example}
+	Figure~\ref{fig:fork} shows a fork. Two processes trying to extend block $b_2$ found a new block, $b_3$ and $b_3'$.
+	
+	Later another block $b_4$ was found, that extends $b_3$.
+	According to the longest chain rule, all nodes will adopt the blocks $b_3$ and $b_4$ and discard the block $b_3'$.
+	
+	\textbf{Transactions that where only included in $b_3'$ but not in $b_3$ will not be part of the longest chain. They are effectively discarded.}
+	\begin{description}
+		\item[Coinbase transaction] The coinbase transaction in $b_3'$ is discarded. Thus the node that created $b_3'$ loses his block reward.
+		\item[Double spending] Assume transactions $t$ and $t'$ spend the same output. Assume transaction $t'$ is included in $b_3'$ and $t$ is included in $b_3$. $t'$ is discarded together with $b_3'$. Since $b_3$ includes $t$, $t'$ cannot be included in a later block either.
+	\end{description}
+	
+	 
+\end{example}
+
 \section{PoW and network latency}
+\label{sec:fork}
+
 We now analyze the probability that a fork occurs based on the network delay, i.e. the time it takes to broadcast a block to the different nodes.
+Results in this section are taken from \href{https://www.gsd.inesc-id.pt/~ler/docencia/rcs1314/papers/P2P2013_041.pdf}{Decker and Wattenhofer, 2013.}
 
 \begin{definition}
 	We write $\delta$ for the average time it takes for a block until it is validated by a specific node in the network.
@@ -240,6 +266,7 @@ We now analyze the probability that a fork occurs based on the network delay, i.
 
 In the following theorem we assume that nodes have the same mining power and are following the longest chain rule.
 \begin{theorem}
+	\label{thm:fork}
 	Let $p$ be the probability that a block is found within one second.
 	Then the probability for a fork is
 	\[
@@ -253,12 +280,24 @@ Thus $$P[\text{fork}] = 1- P[\text{no block found during dissemination}]$$
 $$P[\text{no block found during dissemination}] = (1-p)^\delta$$
 \end{proof}
 
-\begin{cor}Let $P[\textnormal{fork}^l]$ be the probability that after a fork, both chains are extended by $l$ blocks. It holds
+\begin{cor}
+\label{cor:longfork}
+Let $P[\textnormal{fork}^l]$ be the probability that after a fork, both chains are extended by $l$ blocks. It holds
 	\[
 		P[\textnormal{fork}^l] \leq \left(1-(1-p)^\delta\right)^l
 	\]
 	
 \end{cor}
+\begin{proof}
+Assume one chain $c_1$ is extended by one block. If a fork of this chain, $c_2$ is also extended, this has to happen before the new block on $c_1$ is propagated. Thus the probability that two chains in a fork are extended, is equal to the probability that a block on the second fork is found, while the block on the first fork is disseminated. This is less than the probability of a fork.
+\end{proof}
+
+Corollary~\ref{cor:longfork} says that the probability that a block is discarded because of a fork drops exponentially, with the numbers of blocks that are added after this block.
+
+\begin{definition} We say that a transaction is \emph{confirmed}, if it is included in a block, and several blocks are added after this block.
+	
+In bitcoin, it is recommended to wait for additional 5 blocks, after the block including a transaction.	
+\end{definition}
 
 \question{
 \begin{itemize}
@@ -267,6 +306,5 @@ $$P[\text{no block found during dissemination}] = (1-p)^\delta$$
 	\item What is the fork probability if the average network delay $\delta$ is 1 minute?
 	\item What is the fork probability if the average block delay is 1 minute or 10 seconds?
 \end{itemize}
-
 }
 	
