@@ -1,0 +1,102 @@
+%!TEX root = ../main.tex
+
+\section{Improving PoW}
+
+
+
+\subsection{Alternative mining puzzles}
+See Chapter 8 of \href{https://d28rh4a8wq0iu5.cloudfront.net/bitcointech/readings/princeton_bitcoin_book.pdf}{this book}.
+
+\begin{definition}
+A suitable mining function has the following properties:
+\begin{description}
+	\item[Adjustable difficulty] It must be possible to adjust the difficulty to adapt to a growing network.
+	\item[Fast verification] Every node in the network needs to verify a solution. Thus verification should be easy, compared with computation.
+	\item[Progress free] The probability to solve the PoW function in the next second, should be independent of how long a process has been trying to solve it.
+\end{description}
+\end{definition}
+
+
+\subsection{ASIC resistance}
+Asics resistance is motivated by the fact that bitcoin mining is currently done almost exclusively on specialized hardware, i.e. application specific integrated circuits (ASICs). There are currently produced by a single manufacturer, yielding a single point of failure and trust. 
+
+Further, these ASICs are difficult to use for other purposes than mining cryptocurrencies.
+
+\begin{definition}A PoW puzzle is \emph{ASICs resistant}
+if specialized hardware can only provide a small benefit in computing this puzzle, compared to a general purpose CPU.
+\end{definition}
+
+\begin{note}
+	Proposals for ASICs resistant puzzles include
+	\begin{description}
+		\item[Memory hard functions] The idea for this is to design puzzles that require a lot of memory access. The idea is that memory access is harder to optimize than cpu computation, as done for hashing.
+		\item[CPU benchmarks] A recent proposal~\href{https://conferences.computer.org/icdcs/2019/pdfs/ICDCS2019-49XpIlu3rRtYi2T0qVYnNX/7v1qCHBMZ7kt9TX7Q7GlHe/6ND9kaBwjCCoPVJQvvyQ81.pdf}{HashCore ICDCS'19} proposes to use CPU benchmarks, used normally during hardware development, to create PoW puzzles.
+	\end{description}
+Both proposals result in functions that are harder to verify.
+\end{note}
+
+\subsection{Proof of useful work}
+The idea behind proof of useful work, is that energy and hardware used to compute PoW solutions seems "wasted".
+
+\begin{definition} A PoW puzzle is \emph{useful}, if its solution or computation has an application or utility outside of blockchain domain.
+\end{definition}
+
+\begin{note} Proposals for useful PoW are still subject to research. Proposals include:
+	\begin{description}
+		\item[Finding prime numbers]
+		\item[Evaluate small degree polynomials] This can help to determine mathematical problems like vector orthogonality, shortest path problems, ...
+	\end{description}
+
+Note that while finding problems, e.g. vector orthogonality have applications, it is usually not useful to simply find two random orthogonal vectors. Rather two orthogonal vectors should be found from a given set. 
+
+This poses the question, how the set, i.e. the problem should be submitted.
+\end{note}
+
+
+\subsection{Proof of Storage}
+
+\begin{definition} A \emph{proof of storage} mining puzzle requires a node to store a certain file to be able to create a block.	
+\end{definition}
+
+\begin{note}
+In a simple variant a proof of storage is a merkle inclusion proof.
+This can be combined with a classical PoW to adjust hardness, ...
+
+Several problems arise:
+\begin{itemize}
+	\item What file to store? 
+	\item How to distinguish a stored file from a file, retrieved if necessary.
+	\item How to deal with the increased payload due to merkle proofs.
+\end{itemize}
+\end{note}
+
+A probably better alternative is to use the amount of storage a node provides as stake, in a Proof of stake scheme.
+
+\section{Proof of Stake}
+Bitcoin uses PoW to avoid centralization. To perform a 51\% attack, the attacker has to invest huge amounts of energy and hardware. 
+The idea behind proof of stake is to use the cryptocurrency for this purpose. 
+I.e. to do a 51\% attack in PoS, the attacker needs to own 51\% of the currency.
+
+\begin{definition}
+	Proof of work distributes block rewards to miners, equivalent on the energy and hardware cost they have invested. Proof of stake aims to distributed mining rewards, depending on the amount of money (i.e. cryptocurrency) the miners have frozen for this purpose.
+\end{definition}
+
+\begin{example}
+In PPCoin (Peercoin) a miner identified by \textit{addr}, that has deposited $\mathtt{coin}(\textit{addr})$ can supply the current block, if 
+\[
+	H(\mathtt{prevBlockHash} || \textit{addr}\, || \mathtt{time in seconds}) < d_0 \cdot \mathtt{coin}(\textit{addr})
+\]
+\begin{itemize}
+	\item Here $d_0$ is a base difficulty. The probability that a miner with a specific address \textit{addr} can mine the next block is proportional to $\mathtt{coin}(\textit{addr})$.
+	\item $\mathtt{timeinseconds}$ shows time in seconds. Thus a miner gets a change to submit a solution every second.
+\end{itemize}
+
+This constructions gives several \textbf{limitations and problems}. Some of these are common for many PoS schemes.
+\begin{description}
+	\item[Predictability] A miner can predict whether he will be able to mine the next block.
+	\item[PoW next block] A miner with sufficient resources can try to tweak the current block, s.t. he will be able to also mine the next block. 
+	\item[Non deciding] In case of a fork, a miner does not have to decide on which block he wants to mine. It is feasible to mine of both chains. Thus forks may prevail for long.
+	\item[History rewrite] Theoretically it is feasible to rewrite the complete, or a large part of the history of this chain. 
+\end{description}
+The above problems are not specific to Peercoin, but are also present in other proof of stake solutions.
+\end{example}

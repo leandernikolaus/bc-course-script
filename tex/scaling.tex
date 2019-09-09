@@ -1,0 +1,171 @@
+%!TEX root = ../main.tex
+
+\section{Blocksize and block interval}
+Bitcoin currently achieves about 7 transactions per second. 
+To increase this, it was heavily discussed, wether the blocksize should be increased, or block frequency can be reduced.
+
+\begin{definition} A change in maximum blocksize or target block interval is called a \emph{reparametrization}.
+\end{definition}
+
+Research, (see resources.md) has suggested that network latency grows linearly with blocksize.
+\begin{lem} 
+	A reparametrization that increases blocksize will result in higher network latency and thus in an increased fork probability.
+\end{lem}
+\begin{proof}
+Theorem~\ref{thm:fork} says that increased network latency results in higher fork probability.	
+\end{proof}
+
+\begin{lem}
+	A reparametrization that decreases target block interval causes an increased fork probability.
+\end{lem}
+\begin{proof}
+A reduced target block interval,~i.e., less than the current 10~min value, will result in an increased probability that a block is found within a second ($p$ in Theorem~\ref{thm:fork}).
+\end{proof}
+
+\subsection{Ghost}
+GHOST is a proposal to avoid the increased vulnerability to selfish mining and double spend attacks. This is especially relevant to maintain security after reparametrization for increased throughput.
+
+\begin{definition} The \emph{Greedy heaviest-observed subtree (GHOST)} rule says, instead of selecting the longest chain the root of the subtree with the most leafs should be selected.	
+\end{definition}
+
+\begin{note}
+	\begin{itemize}
+		\item As long as only a single fork exists, the GHOST rule is identical with the longest chain rule.
+		\item In a selfish-mining attack the attackers chain will not contain any forks, since only a single node/agent is trying to extend it. The chain build by honest nodes may show additional forks. Using the GHOST rule, these forks do not give an advantage to the attacker.
+		\item Using network attacks the attacker may cause forks on the honest chain. Using the GHOST rule, these attacks have no impact on the probability of a successful attack.
+	\end{itemize}
+\end{note}
+
+\subsection{Inclusive chains and DAGs}
+An increased fork probability may result in many blocks being discarded. This results in minors not getting their block rewards. It provides an incentive for miners/nodes to form larger groups, rather than mine individually. 
+This is true also when using the GHOST rule.
+
+\begin{definition} The published blocks, both on the longest chain and in other forks, build a \emph{tree}, routed at the genesis block.
+The \emph{previous block hash} $h_{-1}$ pointers point to the parent of a block.
+\end{definition}
+\begin{definition}
+	In an \emph{inclusive} blockchain, instead of just including the hash of the parent, a block $b_{new}$ can include hashes of another block $b$, if:
+	\begin{itemize}
+		\item $b$ is not an ancestor of $b_new$
+		\item the depth of $b$ ($d_b$) (i.e. distance from the genesis block) is less than the depth of $b_{new}$ ($d_{new}$)
+		\item $b$ is a child to one of the ancestors of $b_{new}$.
+	\end{itemize}
+	Blocks included as additional ancestors are called \emph{uncles.}\\
+	\textbf{Fees and rewards in an inclusive blockchain}
+	\begin{itemize}
+		\item A block $b$ included as uncle in $b_{new}$ receives a fraction of the block-reward. The fraction reduces with the distance between $b$ and $b_{new}$,~i.e. $d_{new}-d_{b}$.
+		\item A block $b_{new}$ receives a small reward for every uncle it includes.
+	\end{itemize}
+\end{definition}
+
+\begin{theorem}
+	\label{thm:uncleorder}
+It is possible to define a deterministic order on all blocks in a chain and all uncles in a chain, such that the order extends when the chain is extended.
+This allows to execute transactions that are included in the uncle blocks, but not in the main chain.
+\end{theorem}
+
+\begin{proof}
+	The order is done based on the following principles, from highest to lowest priority:
+	\begin{itemize}
+		\item Ancestors of $b_{new}$ are ordered before uncles of $b_{new}$.
+		\item Uncles of $b_{new}$ are ordered before $b_{new}$.
+		\item Uncles are ordered according to their depth.
+		\item At the same depth, uncles are ordered according to their hash.
+	\end{itemize}
+\end{proof}
+
+\begin{example}
+Ethereum uses uncle blocks. An uncle $b$ is rewarded $1-\frac{(d_{new}-d_b)}{7}$ of the block reward. Thus uncles that are more than 6 blocks behind are not rewarded.
+
+For including an uncle a block creator is rewarded $\frac{1}{32}$ of a block reward.
+\end{example}
+
+\begin{note}
+Inclusive blockchains have the following effect on scalability:
+\begin{itemize}
+	\item If uncle blocks include transactions that are not included or conflicting with the main chain this can further increase scalability. Execution of transaction in uncles is not implemented in Ethereum.
+	\item Given execution of transactions in uncles, it is difficult how to incentivize different blocks in a fork, to include different transactions.
+	\item It is possible to extend inclusive blockchains to allow uncles that are not children of ancestors in the current main chain. Theorem~\ref{thm:uncleorder} still holds, but becomes more complex.
+\end{itemize}
+
+Security and incentives:
+\begin{itemize}
+	\item The possibility to receive a block reward, being not included in the main chain, reduces the urge to form larger mining groups (pools).
+	\item The reward an uncle receives plus the reward for including an uncle is less then the block reward. This should incentivize nodes to try and extend the main chain.
+	\item The reward for uncles is reduces over distance. This disincentivises keeping blocks secret. 
+\end{itemize}
+\end{note}
+
+\begin{theorem} 
+In an inclusive blockchain, the selfish mining attack becomes profitable at a lower $\alpha$ threshold than without inclusive mining.
+
+This can be leveraged to some extend, if the difficulty is adjusted not based on the frequency of blocks on the main chain, but based on the frequency of blocks on the main chain, and uncles.
+\end{theorem}
+\begin{proof} See \href{https://arxiv.org/pdf/1901.04620.pdf}{Selfish Mining in Ethereum} 
+	\begin{figure}[H]
+		\centering
+		\includegraphics{fig/inclusive-selfish-mining}
+	\end{figure}
+	In the above figure from [Selfish Mining in Ethereum, ICDCS'19] Scenario 1 is where block difficulty is only adjusted based on the new blocks on the main chain.
+	Scenario 2 adjusts difficulty based on creation of blocks and uncle blocks.
+	
+\end{proof}
+
+\section{Bitcoin NG}
+See resources.md on course info for Video, slides, paper, ...
+
+\begin{definition} Bitcoin-NG differentiates between \emph{Keyblocks} and \emph{Microblocks}. 
+	\begin{description}
+		\item[Keyblocks] Include a proof of work. No transactions, a public key, and the hash of the last Key- or Microblock.
+		\item[Microblocks] Include no PoW but transactions, a previous block hash, and a signature matching public key from last KeyBlock.
+	\end{description}
+
+	\noindent
+	\textbf{Fork resolutions} Longest chain rule (or GHOST) is used but only looks at the Keyblocks.
+	\textbf{Fee distribution} Fees are distribution between the creator of the microblock (40\%) and the creator of the next Keyblock (60\%).
+\end{definition}
+
+\begin{note} 
+	(Bitcoin-NG)\newline
+	
+	
+	\begin{itemize}
+		\item Security and fork probability (keyblocks) is decoupled from throughput and transaction rate (microblocks).
+		\item The distribution of fees (40/60) ensures that it is better to reference the latest microblock, rather than keeping the transactions for your own microblocks. Also significant incentive for actually publishing microblocks.
+	\end{itemize}
+
+
+\end{note}
+
+\section{Sharding for blockchains}
+When sharding, the idea is to divide the blockchain into many smaller chains. Each small chain (i.e. shard) maintains part of the data.
+
+\begin{definition} In a \emph{sharded blockchain} every node only maintains a part of the data and processes transactions that access the data he stores.
+\end{definition}
+
+\begin{note} \textbf{Problems for sharding:}
+	\begin{enumerate}[label=\Alph*)]
+		\item How to distribute the state?
+		\item How to process updates that access state in multiple shards?
+		\item How to avoid that an attacker takes over one shard?
+	\end{enumerate}
+
+\textbf{Solutions}
+\begin{enumerate}[label=\Alph*)]
+	\item Using consistent hashing. E.g., shard 1 stores all outputs that belong to addresses that start with 01.
+	\item There are different cases:
+	\begin{itemize}
+		\item Payments from one shard to another, can be split into a withdrawal and deposit. Execute withdrawal first. To execute deposit, must reference withdrawal.
+		\item Transactions that are conditioned on multiple shards use a variant of 2 Phase Commit, e.g. first lock required outputs. When all necessary outputs are locked, execute transaction.
+	\end{itemize}
+	Note that variant 2 can diminish the benefit of sharding, since it requires coordination and locks state.
+	\item There are two ideas:
+	\begin{itemize}
+		\item Distribute miners to shards according to their hashes, and redistributed frequently.
+		\item Allow miners to participate in multiple shards, and to publish blocks on multiple shards with a single proof of work. 
+		
+	\end{itemize}
+	Both of these are problematic. In the first, redistribution is reducing the benefit of sharding. The second encourages minors to form pools.
+\end{enumerate}
+
+\end{note}
