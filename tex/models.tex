@@ -1,0 +1,69 @@
+%!TEX root = ../main.tex
+
+\noindent
+In the Bitcoin protocol, any node can join. Additional any entity can create multiple accounts on bitcoin. Accounts are per default anonymous.
+This model is called \textbf{unpermissioned}. No permission is needed to participate. 
+
+\section{Permissioned systems}
+Permissioned systems assume there exists a list of members. 
+Table~\ref{tab:members} gives an example. Typically assume that all members have a copy of the membership list. 
+
+The existence of a membership list, or possibility to create and distribute one
+is often referred to as public key infrastructure (PKI).
+It allows any two members to contact each other (using listed IP addresses), and create an authenticated channel (using public keys).
+
+\begin{table}[h]
+	\centering
+	\begin{tabular}{| c | c | c | c | }
+		\hline
+		ID & $pubkey$ & IP & ... \\
+		\hline
+		1 & 0x1f3 & &\\
+		\hline
+		2 & 21xf3 & &\\
+		\hline
+		
+	\end{tabular}
+	\caption{Membership list example. \label{tab:members}}
+\end{table}
+
+We distinguish different permissioned system models, based on the failure assumptions, e.g. what failures may happen.
+
+\paragraph{No failure}
+Assuming that members do not fail, it is possible to use authenticated channels for trusted interactions.
+
+\paragraph{Central node does not fail}
+Given a centralized node, that processes trust to not fail, they can build a centralized system, where the trusted node is responsible to manage state and interaction for the other members.
+
+This model is used in cloud services, where all users connect to the service provider and trust this provider to store and maintain their application state and coordinate interactions with other users.
+
+\paragraph{Crash failure}
+In this model, nodes can stop by crash failures. It is not possible to communicate with a crashed node and the data stored on a crashed node may be lost.
+
+This model is often assumed for machines that cooperatively run a service within a trusted domain, e.g. servers within a data center. 
+
+In this model it is possible to implement consistent services, e.g. a blockchain, that work as long as a majority of the nodes is running. Examples are the Paxos algorithm thaught in DAT520.
+
+\paragraph{Byzantine fault tolerance}
+It is assumed that \emph{any node may fail or misbehave}, i.e. a faulty node may not only stop, but may act maliciously, trying to sabotage the application. However, it is assumed that \emph{only a small fraction of the nodes actually fail or misbehave}.
+
+Misbehavior may for example be caused by 
+\begin{itemize}
+	\item virus or malware
+	\item misconfiguration
+	\item sabotage
+\end{itemize}
+The above assumption says, that at most a small fraction of the nodes will be victim to any of these.
+
+In this model it is possible to implement consistent services, e.g. a blockchain, that work as long as a large majority, e.g. 2/3 of the members are correct.
+
+\paragraph{Selfish or rational misbehavior}
+All nodes could misbehave if it benefits them. Such nodes are called \emph{selfish} or \emph{rational}. 
+
+In this model it is possible to design algorithms using game theory. 
+For this, every node is assigned a utility function:
+
+For example the utility of participating in bitcoin mining is the block reward and transaction fees, minus costs for computation and networking, e.g. energy and hardware.
+
+The goal for game theory is to show that nodes cannot increase their utility, by deviating from a protocol, e.g. by deviating from the longest chain rule.
+

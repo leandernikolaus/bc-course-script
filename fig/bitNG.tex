@@ -1,0 +1,22 @@
+%!TEX root = ../main.tex
+
+\begin{tikzpicture}
+	[block/.style={rectangle,draw,thick, minimum size=1cm},
+	mblock/.style={circle,draw,thick, minimum size=1cm},
+	dblock/.style={block, dashed},
+	noblock/.style={block, white},
+	prev/.style={draw, -latex, thick}, 
+	dprev/.style={prev, dashed},
+	just/.style={-latex, double, thick, red},
+	justarc/.style={out=135, in=45},
+	interval/.style={|-|, dashed, thick},
+	node distance =.5cm and 1cm]
+	\node(b0)[block, draw=blue]{$b_0$};
+	\node(b1)[mblock, right=of b0, fill=yellow]{$b_0'$};
+	\draw[prev](b1) -- (b0);
+	\node(b2)[block, right=of b1, draw=red]{$b_1$};
+	\draw[prev](b2) -- (b1);
+	
+	
+	
+\end{tikzpicture}

@@ -134,8 +134,41 @@ See resources.md on course info for Video, slides, paper, ...
 		\item The distribution of fees (40/60) ensures that it is better to reference the latest microblock, rather than keeping the transactions for your own microblocks. Also significant incentive for actually publishing microblocks.
 	\end{itemize}
 
-
+\noindent	
+\textbf{Problem}
+	\begin{itemize}
+		\item Since Bitcoin-NG relies on a leader, progress can be reduced through leader failure. A single leader failure will not be a problem, but if an attacker causes multiple leaders to fail, e.g. by a DDOS (Distributed denial of service) attack, transaction throughput may be significantly reduced.
+	\end{itemize}
 \end{note}
+
+\begin{example}
+To understand the choice of 40\%, 60\% fee distribution, consider the example in Figure~\ref{fig:bitng-1}. Squares represent key blocks, while circles represent microblocks. 
+
+In Figure~\ref{fig:bitng-1} the minor of the red block gets 60\% of the fees from the yellow transactions from microblock $b_0'$.
+
+If he instead mines on top of $b_0$, he can himself publish a microblock including the yellow transactions. This is shown in Figure~\ref{fig:bitng-2}.
+In this case the red minor receives 40\% of the fees from yellow transactions. 
+Additionally, if the red minor has a fraction of the mining power equal to $\alpha$, he has a probability $\alpha$ to mine key-block $b_2$ and get additional 60\% of the yellow fees. 
+If $\alpha<0.33$ then $0.4+\alpha\cdot 0.6 < 0.6$. Thus the red minor will try to extend $b_0'$.
+
+Similarly, if the blue minor does not publish block $b_0'$ but instead hopes to publish $b_2$ in Figure~\ref{fig:bitng-2}, his expected fraction of the yellow fees is $\beta\cdot 0.6 <0.4$. Thus for a hashing fraction $\beta<0.33$ it is better to publish $b_0'$.
+	\begin{figure}[h]
+		\centering
+		\input{fig/bitNG}
+		\caption{Red miner gets 60\% of yellow transactions.}
+		\label{fig:bitng-1}
+	\end{figure}
+	\begin{figure}[h]
+		\centering
+		\input{fig/bitNG-2}
+		\caption{Red miner expects to get $40+\alpha\cdot 60$\% of the yellow transactions.}
+		\label{fig:bitng-2}
+	\end{figure}
+
+	
+\end{example}
+
+
 
 \section{Sharding for blockchains}
 When sharding, the idea is to divide the blockchain into many smaller chains. Each small chain (i.e. shard) maintains part of the data.
@@ -149,7 +182,7 @@ When sharding, the idea is to divide the blockchain into many smaller chains. Ea
 		\item How to process updates that access state in multiple shards?
 		\item How to avoid that an attacker takes over one shard?
 	\end{enumerate}
-
+\noindent
 \textbf{Solutions}
 \begin{enumerate}[label=\Alph*)]
 	\item Using consistent hashing. E.g., shard 1 stores all outputs that belong to addresses that start with 01.
