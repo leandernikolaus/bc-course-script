@@ -1,0 +1,29 @@
+%!TEX root = ../main.tex
+
+\noindent
+Unpermissioned blockchains require that published blocks carry a nonce that causes the block hash to be meet a specific difficulty (e.g. start with a specific number of zeros). The this proof of work has two main functionalities:
+
+\begin{enumerate}
+	\item \textbf{Publishing rate:} Requiring a proof of work ensures that blocks are published at a limited rate. This ensures that, whp., a block is propagated throughout the network, before the next block is published.
+	\item \textbf{Fork probability:} If, while a block is propagated throughout the network, another block is published, these blocks create a fork and put the system in an undecided state. Proof of work ensures that the probability that two blocks are found concurrently is small. 
+\end{enumerate}
+
+In a permissioned system, similar guarantees can be achieved using a certificate.
+
+\begin{definition}[System Model]
+	A permissioned system is comprised of $N$ nodes $n_1, n_2, ..., n_N$.
+	We assume that nodes have access to digital signatures, and that each node knows public keys of all other nodes.	
+\end{definition}
+
+\begin{definition}
+A certificate for a block $b$ is a collection of digital signatures for $b$. 
+A certificate contains signatures from more than $N\cdot\frac{2}{3}$ different nodes. We write $c_{min}$ for the minimum number of signatures contained in a certificate $$c_{min} = \left\lceil\frac{2N+1}{3}\right\rceil$$
+\end{definition}
+
+
+\begin{idea} We now give an intuition how certificates can limit publishing rate and fork probability:
+	\begin{enumerate}
+		\item \textbf{Publishing rate:} To publish a block with certificate, this block has to be transmitted, validated and signed by at least $c_{min}$ nodes. Thus, blocks cannot be published faster, than (most) of the nodes can validate them.
+		\item \textbf{Fork probability:} If less than $\frac{N}{3}$ nodes signed multiple conflicting blocks, no two conflicting blocks can both receive a certificate.
+	\end{enumerate}
+\end{idea}

@@ -1,0 +1,70 @@
+%!TEX root = ../main.tex
+
+\noindent
+In the following we present a variant of Rule~2 that does not lead to the problem from Example~\ref{ex:problem} in Section~\ref{sec:live}.
+
+We first define a 3-locked block.
+\begin{definition}
+A node $n_i$ sets $n_i.\lock_3=b$, if $b$ is the block at highest depth, s.t. 
+$n_i$ has signed a block $b''$ with $b''.\just=b'$ and $b'.\just=b$.
+\end{definition}
+
+\begin{figure}[h!]
+	\centering
+	\input{fig/newlock}
+	\caption{Block $b_a$ is locked on signing $b_f$.}
+	\label{fig:newlock}
+\end{figure}
+
+\begin{Rule}[replaces Rule~2]
+	A node $n_i$ signs a block $b$ only if 
+	\begin{enumerate}[label=\alph*)]
+		\item $b$ is a descendant from $n_i.\lock_3$
+		\item $b.\just.\depth>n_i.\lock_3.\depth$.  
+	\end{enumerate}
+\end{Rule}
+
+\begin{figure}[h!]
+	\centering
+	\input{fig/rule3a}
+	\caption{Showing 3-locks that allow two sign any block extending $b_2$.}
+	\label{fig:3locka}
+\end{figure}
+
+\begin{figure}[h!]
+	\centering
+	\input{fig/rule3b}
+	\caption{Rule~3~b) allows $n_2$ to sign $b_7''$.}
+	\label{fig:3lockb}
+\end{figure}
+
+
+\begin{example}
+	Figure~\ref{fig:3locka} shows position of 3-locks in the same situation as shown in Figure~\ref{fig:problem1}. Rule~3  allows to sign any descendant of $b_2$.
+	
+Figure~\ref{fig:3lockb} shows a similar situation as in Figure~\ref{fig:problem}, only using 3-locks. $n_2$ has signed $b_6'$ and set its 3-lock to $b_3'$. The leader for depth 7 failed to collect the certificate for block $b_5'$ from $n_2$. Thus he extended block $b_4''$. 
+Rule~2~b) still allows $n_2$ to sign $b_7''$.
+\end{example}
+
+Using Rule~3, it is enough if the leader waits for the last certificate from $c_{min}$ nodes on Line~\ref{line:wait} of Algorithm~\ref{alg:leader}.
+
+
+\begin{definition}
+\label{def:confirmed2}	
+We say that a block $b$ is \emph{3-confirmed}, if there exist blocks $b'$, $b''$, and $\hat{b}$ such that, $b=b'.\just$, $b'=b''.\just$, and $b''=\hat{b}.\just$ 
+and $b.\depth = b''.\depth-2$.	
+\end{definition}
+
+\begin{figure}
+	\centering
+	\input{fig/3confirm}
+	\caption{Block $b$ is 3-confirmed.}
+\end{figure}
+
+\begin{theorem}
+If nodes follow Rule~3 (instead of Rule~2) and a block $b$ is 3-confirmed, then any certified block at depth $d>b.\depth$ is a descendant of $b$.
+\end{theorem}
+
+\begin{theorem}[Speculation]
+Using Rule~3, if a node $n_i$ cannot sign a block $b$ due to Rule~3, then $n_i$ has a proof of misbehavior against the leader that published $b$.
+\end{theorem}

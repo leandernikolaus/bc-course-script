@@ -1,0 +1,52 @@
+%!TEX root = ../main.tex
+
+\begin{tikzpicture}
+	[block/.style={rectangle,draw,thick, minimum size=1cm},
+	dblock/.style={block, dashed},
+	noblock/.style={block, white},
+	prev/.style={draw, -latex, thick}, 
+	dprev/.style={prev, dashed}, 
+	just/.style={-latex, double, thick, red},
+	justarc/.style={out=135, in=45},
+	interval/.style={|-|, dashed, thick},
+	sign/.style={green!70!black, fill=white},
+	node distance =.5cm and 1cm]
+	\node(b0)[block]{$b_0$};
+	
+	\node(b2)[block, right=of b0]{$b_2$};
+	\draw[prev](b2) -- (b0);
+	\node(b3)[noblock, right=of b2]{};
+	\node(b3a)[block, above right=of b2.east]{$b_3'$};
+	\draw[prev](b3a) -- (b2);
+
+	\node(b3b)[dblock, below right=of b2.east]{$b_3''$};
+	\draw[dprev](b3b) -- (b2);
+	
+	\node(b4)[noblock, right=of b3]{};
+	\node(b4b)[block, right=of b3b.east]{$b_4''$};
+	\draw[dprev](b4b) -- (b3b);
+	\node(b4a)[dblock, right=of b3a.east]{$b_4'$};
+	\draw[prev](b4a) -- (b3a);
+
+	\node(b5)[noblock, right=of b4]{};
+	\node(b5b)[dblock, right=of b4b.east]{$b_5''$};
+	\draw[dprev](b5b) -- (b4b);
+
+	\foreach \from/\to in {b2/b0, b3a/b2, b4a/b3a, b5b/b4b}{
+		\draw[just] (\from) to[justarc] (\to);
+	}
+	\draw[just] (b3b) to[justarc, in=315] (b2);
+	% \draw[just] (b5b) to[justarc, in=0] (b2);
+	
+	\node at (b3a.south)[below=0, inner sep=0,sign]{$\langle n_2,n_3, n_4\rangle$};
+	\node at (b3b.south)[below=0, inner sep=0,sign]{$\langle n_1\rangle$};
+	\node at (b4a.south)[below=0, inner sep=0,sign]{$\langle n_2\rangle$};
+	\node at (b4b.south)[below=0, inner sep=0,sign]{$\langle n_1,n_3, n_4\rangle$};
+	\node at (b5b.south)[below=0, inner sep=0,sign]{$\langle n_1\rangle$};
+	
+	\node (l2) at (b3a.north) [white,rectangle, fill=green!70!black]{$n_2$};
+	\draw [green!70!black, very thick] ([xshift=2mm]l2.north) arc [start angle = 0, end angle=180, radius=2mm];
+	\node (l1) at (b4b.north) [white,rectangle, fill=green!70!black]{$n_1$};
+	\draw [green!70!black, very thick] ([xshift=2mm]l1.north) arc [start angle = 0, end angle=180, radius=2mm];
+	
+\end{tikzpicture}

@@ -1,0 +1,38 @@
+%!TEX root = ../main.tex
+
+\begin{tikzpicture}
+	[block/.style={rectangle,draw,thick, minimum size=1cm},
+	dblock/.style={block, dashed},
+	noblock/.style={block, white},
+	prev/.style={draw, -latex, thick}, 
+	dprev/.style={prev, dashed}, 
+	interval/.style={|-|, dashed, thick},
+	node distance =.5cm and 1cm]
+	\node(b0)[block]{$b_0$};
+	\node(b1)[block, right=of b0]{$b_1$};
+	\draw[prev](b1) -- (b0);
+	\node(b2)[block, right=of b1]{$b_2$};
+	\draw[prev](b2) -- (b1);
+	\node(b3)[noblock, right=of b2]{};
+	\node(b3a)[block, above right=of b2.east]{$b_3'$};
+	\draw[prev](b3a) -- (b2);
+
+	\node(b3b)[dblock, below right=of b2.east]{$b_3''$};
+	\draw[dprev](b3b) -- (b2);
+	
+	\node(b4)[noblock, right=of b3]{};
+	\node(b4b)[dblock, right=of b3b.east]{$b_4''$};
+	\draw[dprev](b4b) -- (b3b);
+	\node(b4a)[block, right=of b3a.east]{$b_4'$};
+	\draw[prev](b4a) -- (b3a);
+
+	\node(b5)[noblock, right=of b4]{};
+	\node(b5b)[dblock, right=of b4b.east]{$b_5''$};
+	\draw[dprev](b5b) -- (b4b);
+	
+	
+	
+	\foreach \x in {0, 1, 2,3,4}{
+	\draw[interval] ([xshift=-.4cm,yshift=-2cm]b\x.west) -- node[below]{$\depth=\x$} ([xshift=.4cm,yshift=-2cm]b\x.east);};
+	
+\end{tikzpicture}

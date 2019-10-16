@@ -1,0 +1,27 @@
+%!TEX root = ../main.tex
+
+\begin{tikzpicture}
+	[block/.style={rectangle,draw,thick, minimum size=1cm},
+	dblock/.style={block, dashed},
+	noblock/.style={block, white},
+	prev/.style={draw, -latex, thick}, 
+	dprev/.style={prev, dashed},
+	just/.style={-latex, double, thick, red},
+	justarc/.style={out=135, in=45},
+	interval/.style={|-|, dashed, thick},
+	node distance =.5cm and 1cm]
+	\node(b0)[block]{$b_c$};
+	\node(b1)[block, right=of b0]{$b_d$};
+	\draw[prev](b1) -- (b0);
+	\node(b2)[dblock, right=of b1]{$b_e$};
+	\draw[prev](b2) -- (b1);
+	\node(b3)[dblock, right=of b2]{$b_f$};
+	\draw[prev](b3) -- (b2);
+	
+	
+	
+	\foreach \from/\to in {b1/b0,b3/b1}{
+		\draw[just] (\from) to[justarc] (\to);
+	}
+	
+\end{tikzpicture}

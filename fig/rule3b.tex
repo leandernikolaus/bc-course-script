@@ -1,0 +1,53 @@
+%!TEX root = ../main.tex
+
+\begin{tikzpicture}
+	[block/.style={rectangle,draw,thick, minimum size=1cm},
+	dblock/.style={block, dashed},
+	noblock/.style={block, white},
+	prev/.style={draw, -latex, thick}, 
+	dprev/.style={prev, dashed}, 
+	just/.style={-latex, double, thick, red},
+	justarc/.style={out=135, in=45},
+	interval/.style={|-|, dashed, thick},
+	sign/.style={blue!70!black, fill=white},
+	node distance =.5cm and 1cm]
+	
+	\node(b2)[block]{$b_2$};
+	\node(b3)[noblock, right=of b2]{};
+	\node(b3a)[block, above right=of b2.east]{$b_3'$};
+	\draw[prev](b3a) -- (b2);
+	\node(b4a)[dblock, right=of b3a.east]{$b_4'$};
+	\draw[prev](b4a) -- (b3a);
+	\node(b5a)[block, right=of b4a.east]{$b_5'$};
+	\draw[prev](b5a) -- (b4a);
+	\node(b6a)[dblock, right=of b5a.east]{$b_6'$};
+	\draw[prev](b6a) -- (b5a);
+
+
+	\node(b3b)[dblock, below right=of b2.east]{$b_3''$};
+	\draw[prev](b3b) -- (b2);
+	
+	\node(b4)[noblock, right=of b3]{};
+	\node(b4b)[block, right=of b3b.east]{$b_4''$};
+	\draw[prev](b4b) -- (b3b);
+	
+	\node(b5)[noblock, right=of b4]{};
+	\node(b5b)[dblock, right=of b4b.east]{$b_5''$};
+	\draw[prev](b5b) -- (b4b);
+	\node(b6b)[dblock, right=of b5b.east]{$b_6''$};
+	\draw[prev](b6b) -- (b5b);
+	\node(b7b)[dblock, right=of b6b.east]{$b_7''$};
+	\draw[prev](b7b) -- (b6b);
+
+	\foreach \from/\to in {b3a/b2, b5a/b3a, b6a/b5a, b7b/b4b}{
+		\draw[just] (\from) to[justarc] (\to);
+	}
+	\draw[just] (b4b) to[justarc, in=0] (b2);
+	% \draw[just] (b5b) to[justarc, in=0] (b2);
+	
+	
+	\node (l2) at (b3a.north) [white,rectangle, fill=blue!70!white]{$n_2$};
+	\draw [blue!70!white, very thick] ([xshift=2mm]l2.north) arc [start angle = 0, end angle=180, radius=2mm];
+	
+	
+\end{tikzpicture}

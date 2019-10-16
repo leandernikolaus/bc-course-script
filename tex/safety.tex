@@ -1,0 +1,75 @@
+%!TEX root = ../main.tex
+
+\noindent
+In the following we define a set of rules that correct nodes should follow. We assume that at least $c_{min}$ nodes are following these rules.
+
+\begin{figure}
+	\centering
+	\input{fig/tree}
+\caption{Blocks in a tree and depth $d$ of blocks.}
+\label{fig:tree}
+\end{figure}
+
+The \emph{previousBlock} pointers create a tree structure on blocks. We can thus refer to the \emph{depth} of a block. We write $b.\depth$ for the depth of block $b$. Figure~\ref{fig:tree} shows a tree with different depth levels. Here $b_4''.\depth=4$. Similarly, we refer to the parent, ancestors or descendants of a block. In Figure~\ref{fig:tree}, e.g., $b_5''$ is a descendant of $b_3''$ and all blocks are descendants of $b_0$. Further, $b_3'$ is the parent of $b_4'$ and $b_2$ is an ancestor of $b_4'$. 
+
+We can not define the first rule.
+\begin{Rule}
+After signing a block at depth $d$, only sign at depth $d'>d$.
+\end{Rule}
+\noindent
+The first rule says that nodes should only sign at increasing depth. Especially, they should not sign at the same depth twice.
+
+As noted in Section~\ref{sec:poc}, to prevent forks we should also add a rule that prohibits changing from one branch of the tree to another, e.g., signing  $b_5''$ in Figure~\ref{fig:tree} after signing $b_3'$ and $b_4'$.
+%
+We further note, that it is possible, that no block at a certain depth receives a certificate. E.g.,~$b_3'$ and $b_3''$ may both be signed by 5 out of 10 nodes. Thus, no block has the required ($c_{min}(10)=7$) signatures.  
+%
+Therefore it should still be allowed for a node to sign $b_4'$ after signing $b_3''$. 
+%
+
+\begin{definition}The \emph{locked block} at node $n_i$, $n_i.\lock$ is the block $b$ at highest depth, such that $n_i$ has (or has seen) a certificate for $b$.
+\end{definition}
+
+\begin{Rule} 
+	A node $n_i$ only signs a block that is a descendant of $n_i.\lock$.	
+\end{Rule}
+
+We note that if $c_{min}$ nodes sign a block $b$, that does not imply that these nodes know the certificate of this block. Certificates have to be collected and disseminated by some node. We therefore define the following:
+
+\begin{definition} We assume that every block $b_i$ contains a certificate for a block $b_j$ such that $b_j$ is an ancestor of $b_i$. We say that $b_i.\just=b_j$. 	
+\end{definition}
+
+\begin{lem}
+	For some node $n_i$ that follows Rule 2, it holds that, after signing block $b$, $n_i.\lock.\depth\geq b.\just.\depth$ holds.
+\end{lem}
+
+\begin{example} In Figure~\ref{fig:tree}, if $b_4'.\just=b_3'$, then after signing $b_4'$ a node following Rule~2 will not sign $b_5''$.	
+\end{example}
+
+\begin{figure}
+	\centering
+	\input{fig/confirm}
+	\caption{Blockes with red justification link, confirm block $b$.}
+\end{figure}
+
+\begin{definition}
+\label{def:confirmed}	
+We say that a block $b$ is \emph{confirmed}, if there exist blocks $b'$ and $b''$, such that, $b=b'.\just$, $b'=b''.\just$, and $b.\depth = b''.\depth-2$.	
+\end{definition}
+
+We note that the notion of a confirmed block is similar to proof of work blockchains like bitcoin, where a block counts as confirmed if it has been extended by a certain number of blocks, e.g. 6 blocks in bitcoin.
+
+\begin{theorem}\label{thm:confirmed}
+If nodes follow Rule~2 and a block $b$ is confirmed, then any certified block at depth $d>b.\depth$ is a descendant of $b$.
+\end{theorem}
+
+\begin{proof}
+If $b$ is confirmed, there exist $b'$ and $b''$ as in Definition~\ref{def:confirmed}. $b''$ contains a certificate for $b'$. Thus at least $c_{min}$ nodes have signed $b'$. $b'$ contains a certificate for $b$. Thus upon signing $b'$, a node $n_i$ sets $n_i.\lock=b$.
+
+We have to show that every certified block $\beta$ with $\beta.\depth > b.\depth$ is a descendant of $b$. We proof this by induction over $\Delta_d=\beta.\depth-b.\depth$. 
+
+If $\Delta_d=1$ then $\beta=b'$ since at most one block at depth $b.\depth+1$ can be certified. 
+
+Let $\Delta_d=n+1$. Both $\beta$ and $b'$ are signed by $c_{min}$ nodes. 
+Let $n_i$ be a correct nodes (following Rules~1 and~2) that signed both $\beta$ and $b'$. Due to Rule~1,  $n_i$ signed $b'$ before $\beta$. 
+Thus $n_i.\lock=b$ did hold. The induction hypothesis implies that when signing $\beta$, $n_i.\lock$ was either $b$ or a descendant of $b$. Rule~2 implies that $\beta$ is a descendant of $n_i.\lock$. Thus $\beta$ is a descendant of $b$.
+\end{proof}

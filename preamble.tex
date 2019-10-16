@@ -16,6 +16,11 @@
 \newcommand{\true}{\textbf{true}\xspace}
 \newcommand{\false}{\textbf{false}\xspace}
 
+\newcommand{\just}{\textit{justify}\xspace}
+\newcommand{\depth}{\textit{depth}\xspace}
+\newcommand{\lock}{\textit{lock}\xspace}
+
+
 \usepackage{amsthm}
 
 \theoremstyle{definition}
@@ -29,8 +34,14 @@
 \newtheorem{cor}{Corrolary}
 \newtheorem{theorem}{Theorem}
 \newtheorem{idea}{Idea}
+\newtheorem{Rule}{Rule}
 
 
 \usepackage{algorithm}
 \usepackage{algpseudocode}
 \algrenewcommand\algorithmicprocedure{\textbf{transaction}}
+\algrenewcommand\algorithmicprocedure{\textbf{transaction}}
+\algblockdefx[On]{On}{EOn}
+  [1]{{\bf on} #1}
+  {{\bf EndOn}}
+\algnotext{EOn}

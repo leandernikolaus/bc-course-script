@@ -1,0 +1,97 @@
+%!TEX root = ../main.tex
+
+\noindent
+In Section~\ref{sec:safe1} we have defined rules, how correct nodes should sign blocks and how we can identify confirmed blocks, based on published blocks.
+
+However, we did not define when and how blocks should be created. Further, we note that if at every depth, many blocks are created, it is possible that no block will ever receive a certificate.
+
+To resolve this, we assign leaders to every depth and only allow the leader to publish blocks at his depth:
+\[
+\textrm{leader}(\depth)=n_{\depth\ \text{mod} N}
+\]
+
+Algorithm~\ref{alg:leader} shows how nodes only sign blocks at the next depth and only if the block is published by $\textrm{leader}(\depth)$.
+However, based on a timeout, nodes can hop over one depth.
+
+\begin{algorithm}
+	\caption{Rotating leader}
+	\label{alg:leader}
+	\begin{algorithmic}[1]
+		\State{$\depth=1$}
+		\State{$timer=\text{start}()$}
+		\On{receive $b$ from $\textrm{leader}(\depth)$}
+			\If{$b.\depth=\depth$ and $b$ descendant of \lock}
+				\State{$\text{sign}(b)$}
+				\State{$\depth++$}
+				\State{$timer=\text{restart}()$}
+			\EndIf
+		\EOn
+		\On{$timer$ finish}
+			\State{$\depth++$}
+			\State{$timer=\text{restart}()$}
+		\EOn
+		\On{$\textrm{leader}(\depth)=self$}\label{line:leader}
+			\State{ask all nodes for locked certificate}
+			\label{line:wait}
+			\If{block is missing ad depth $\depth-1$}
+				\State{create empty block at $\depth-1$}
+			\EndIf
+			\State{create block at $\depth$ including deepest certificate}
+			\label{line:leaderend}
+		\EOn
+	\end{algorithmic}
+\end{algorithm}	
+
+Lines~\ref{line:leader} to~\ref{line:leaderend} show how a correct node should propose a block. 
+First a correct node needs to query other nodes, especially his predecessor, for certificates they have collected.
+There are two cases:
+\begin{enumerate}[label=\alph*)]
+	\item If a nodes collects a certificate for the last block $(\depth-1)$, he can immediately publish a new block including this certificate.
+	\item\label{case:notlast} If a nodes does only collect certificates for older blocks. He includes the certificate at highest depth in his block. If no block at $\depth-1$ is known to the node, he may also create that block.
+\end{enumerate}
+The situation from Case~\ref{case:notlast} is also shown in Figure~\ref{fig:newblock}.
+
+\begin{figure}[h!]
+	\centering
+	\input{fig/newblock}
+	\caption{Leader for $b_f.\depth$ may also create $b_e$.}
+	\label{fig:newblock}
+\end{figure}
+	
+\begin{figure}[h!]
+	\centering
+	\input{fig/problem1}
+	\caption{Figure illustrating Example~\ref{ex:problem1}.}
+	\label{fig:problem}
+\end{figure}
+
+\begin{example}\label{ex:problem1}
+Assume $N=4$. Thus $c_{min}=3$ and we have nodes $n_1$, $n_2$, $n_3$, and $n_4$.
+
+In Figure~\ref{fig:problem}, green subscript shows the nodes that have signed a specific block. Nodes $n_2$, $n_3$, and $n_4$ have signed $b_3'$, while $n_1$ has signed $b_3''$. Further, $n_2$ has signed $b_4'$. Thus $n_2.\lock=b_3'$. We assume that only $n_2$ has seen the certificate for $b_3'$.
+
+Since $n_3$ and $n_4$ have not seen a certificate for $b_3'$ they have, together with $n_1$ signed $b_4''$. $n_1$ has seen this certificate, when signing $b_5''$. Thus $n_1.\lock=b_4''$. We note that in this example, none of the nodes have behaved faulty.
+\end{example}	
+
+
+\begin{example}\label{ex:problem}
+This example extends Example~\ref{ex:problem1}. Thus we again assume $N=4$.
+In Figure~\ref{fig:problem} shows a situation as in Example~\ref{ex:problem1}.
+
+Node $n_2$ has locked $b_3'$ and node $n_1$ has locked $b_4''$.
+We note that Rule~2 prohibits $n_2$ from signing $b_6''$ and $n_1$ from signing $b_6'$. This may deadlock the system. 
+
+However we note that Rule~2 allows $n_2$ to sign $b_5''$ as shown in Figure~\ref{fig:problem1}. The reason is that $b_5''$ includes a certificate for $b_4''$. This allows $n_2.\lock$ to be updated.
+\end{example}
+
+In Example~\ref{ex:problem}, it is not helpful, to let $n_1$, $n_3$ and $n_4$ report whether they have voted for $b_4'$ or $b_4''$. The reason for this is that one node may violate Rule~1. Thus $n_3$ or $n_4$ may also sign $b_4''$. 
+\begin{figure}[h!]
+	\centering
+	\input{fig/problem}
+	\caption{Figure illustrating Example~\ref{ex:problem}.}
+	\label{fig:problem}
+\end{figure}	
+
+Existing systems show two possible solutions for the problem shown in Example~\ref{ex:problem}. The PBFT algorithm allows $n_2$ to sign $b_6''$ if he receives messages from $n_1$, $n_3$ and $n_4$ saying that $b_2$ is their last certificate.
+
+Other systems, like Tendermint, include a long timeout while collecting certificates on Line~\ref{line:wait}, during which the new leader waits for additional certificates. This ensures in Example~\ref{ex:problem}, if $n_1$ is correct, the certificate for $b_4''$ will be forwarded to the new leader.
