@@ -1,0 +1,53 @@
+%!TEX root = ../main.tex
+
+
+
+\noindent
+Blockchains like bitcoin, running in an unpermissioned setting only provide probabilistic guarantees. This applies both to proof of work, proof of stake or proof of utility based systems. This is different from BFT systems used in permissioned settings, that provide strong guarantees. 
+
+\section{Consensus guarantees}
+In this section we investigate the different guarantees given and techniques to build a hybrid system, providing strong guarantees in an unpermissioned setting.
+
+\subsection{Bitcoin guarantees}
+According to \href{https://www.usenix.org/system/files/conference/nsdi16/nsdi16-paper-eyal.pdf}{Bitcoin-NG}, the consensus mechanism deployed by Bitcoin (i.e. Nakamoto Consensus) gives the following guarantees assuming that Byzantine or misbehaving nodes hold at most $f<\frac{1}{4}$ of the mining power:
+
+\begin{description}
+	\item[Termination] There exists a time difference function $\Delta(\cdot)$ such that, given a time $t$ and a value $0<\epsilon<1$, the probability is smaller than $\epsilon$, that at times $t',t''>t+\Delta(\epsilon)$ a node returns two different states for the machine at time $t$.
+	\item[Agreement] There exists a time difference function $\Delta(\cdot)$ such that, given a value $0<\epsilon<1$, the probability that at time $t$, two nodes return different states for $t-\Delta(\epsilon)$ is smaller than $\epsilon$.
+	\item[Validity] If the fraction of mining power of Byzantine nodes is bounded by $f$, then the average fraction of state machine transitions that are not inputs of honest nodes is smaller than $f$.
+\end{description}
+
+Note especially that Termination and Agreement only hold probabilistically. 
+This may not be a problem in practice, i.e., $\epsilon$ can be chosen small enough that the difference between probabilistic and absolute guarantees can be ignored. 
+However, to achieve a small $\epsilon$ may require long waiting times, as in bitcoin where the confirmation of a block may take more than 1h.
+Similarly, if one of these properties, e.g. Termination, is violated it is difficult to say wether this is due to the probabilistic nature of this property, or to the fact that assumptions on the failure threshold $f$ where violated.
+
+\subsection{BFT guarantees}
+In comparison, we now analyze agreement and termination properties of the BFT protocol described in Chapter~\ref{ch:BFT}. 
+Here we assume that at most $f<\frac{1}{3}$ of the nodes in a permissioned membership misbehave (are byzantine).
+
+We have shown, that once a block is confirmed according to Definition~\ref{def:confirmed} or~\ref{def:3confirmed} then all future certified blocks will be descendants of this block. We note that, if we consider a block as confirmed according to these definitions, we can also consider all its ancestors as confirmed. Especially, we get the following agreement and termination property.
+
+\begin{description}
+	\item[Termination safety] If a correct node considers a block at \depth $l$ as confirmed, it will never change this block.
+	\item[Agreement] No two correct nodes will disagree on which block is confirmed at \depth $l$.
+	\item[Termination liveness] For some \depth $l$, some block at depth $l'\geq l$ will eventually get confirmed.
+\end{description}
+
+For Termination liveness to hold, it is necessary that a sequence of blocks is proposed by correct nodes.s
+
+\subsection{Hybrid BFT}
+Several blockchain systems propose to use concepts from permissioned BFT to improve Termination and Agreement properties of unpermissioned blockchains. 
+
+\paragraph{Resources}
+\begin{description}
+	\item[ \href{https://www.usenix.org/conference/usenixsecurity16/technical-sessions/presentation/kogias}{ByzCoin}] is a research system from EPFL that builds BFT on top of a proof of work blockchain.
+	\item[\href{https://arxiv.org/pdf/1710.09437.pdf}{Casper FFG}] is a proposal to add a BFT based system, also utilizing Proof of Stake, on top of Proof of Work in Ethereum, to ensure non-probabilistic termination. 
+\end{description}
+
+The difficulty in running a BFT protocol, as proposed in Chapter~\ref{ch:BFT} in an unpermissioned setting is to identify the set of nodes and avoid sybil attacks. Proof of Work or Proof of Stake can be used for this purpose.
+
+In ByzCoin, nodes must solve a Proof of work puzzle to become a node on the BFT system. ByzCoin applies a fixed window size. A node added with one PoW solution will be removed after the end of this window. We note that in ByzCoin, nodes are not equal. Instead every node has a \emph{voting power} relative to the number of PoW puzzles he submitted in the current window. Thus, instead requiring a certificate with signatures from $\frac{2}{3}$ of the nodes, ByzCoin requires signatures from nodes, that together hold $\frac{2}{3}$ of the voting Power in the current window.
+
+Casper FFG on the other hand, requires nodes participating in the BFT protocol to deposit "Stake", i.e. Ether. A node depositing above a minimum of Ether may participate in the BFT protocol. Again, a node has a \emph{voting power} representing the fraction of the total "Stake".
+Casper FFG uses Proof of Work to avoid the leader election problem. I.e. proposed blocks need to contain a proof of work. This limits the number of blocks that can be proposed concurrently.
