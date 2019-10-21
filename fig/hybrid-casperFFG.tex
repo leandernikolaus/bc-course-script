@@ -1,0 +1,55 @@
+%!TEX root = ../main.tex
+
+\begin{tikzpicture}
+	[block/.style={rectangle,draw,thick, minimum size=.8cm, fill=gray!30!white},
+	dblock/.style={block, dashed},
+	noblock/.style={block, white},
+	prev/.style={draw, -latex, thick}, 
+	dprev/.style={prev, dashed},
+	just/.style={-latex, double, thick, red},
+	justarc/.style={out=135, in=45},
+	interval/.style={|-|, dashed, thick},
+	node distance =.5cm and .5cm]
+	
+	\node(b0)[block]{};
+	\node(b1)[block, right=of b0]{};
+	\draw[prev](b1) -- (b0);
+	\node(b2)[block, right=of b1]{};
+	\draw[prev](b2) --node(x1){} (b1);
+	\node(b3)[block, right=of b2]{};
+	\draw[prev](b3) -- (b2);
+	\node(b4)[block, right=of b3]{};
+	\draw[prev](b4) -- (b3);
+	\node(b5)[block, right=of b4]{};
+	\draw[prev](b5) -- (b4);
+	\node(b6)[dblock, right=of b5]{};
+	\draw[dprev](b6) --node(x){} (b5);
+	\node(b7)[dblock, right=of b6]{};
+	\draw[dprev](b7) -- (b6);
+	\node(b8)[dblock, right=of b7]{};
+	\draw[dprev](b8) -- node(y){} (b7);
+	\node (y1) at ([xshift=.3cm]b8.east){};
+	
+	\node (Lb)[block] at ([yshift=-2cm]b0.south){};
+	
+	\begin{scope}[transform canvas={yshift =.2cm,xshift=.2cm}]
+		\node at (b0)[blue]{\large\textbf{$t_1$}};
+		\node at (b1)[blue]{\large\textbf{$t_2$}};
+		\node at (b2)[blue]{\large\textbf{$t_3$}};
+		\node at (b3)[blue]{\large\textbf{$t_4$}};
+		% \node at (b4)[yellow]{\large\textbf{$t_5$}};
+		\node at (b5)[blue]{\large\textbf{$t_5$}};
+		% \node at (b6)[red]{\large\textbf{$t_7$}};
+		\node at (b7)[blue]{\large\textbf{$t_6$}};
+		% \node at (b8)[orange]{\large\textbf{$t_9$}};
+		\node at (Lb)[blue]{\large\textbf{$t_i$}};
+	\end{scope}
+	
+	
+	\draw[transform canvas={yshift = -.7cm}, |-|,thick] (x) --node[below](w){batch these blocks} (y1);
+	\node[below=of w]{};
+	% \draw[transform canvas={yshift = -1.4cm}, |-|,thick, dashed] (x1) --node[below](w){$\text{window}_i$} (y1);
+	
+	
+	\node[right, align=left] at (Lb.east) {a block including\\ transaction $t_c$};
+\end{tikzpicture}

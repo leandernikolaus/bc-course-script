@@ -36,7 +36,7 @@ We have shown, that once a block is confirmed according to Definition~\ref{def:c
 
 For Termination liveness to hold, it is necessary that a sequence of blocks is proposed by correct nodes.s
 
-\subsection{Hybrid BFT}
+\section{Hybrid BFT}
 Several blockchain systems propose to use concepts from permissioned BFT to improve Termination and Agreement properties of unpermissioned blockchains. 
 
 \paragraph{Resources}
@@ -49,5 +49,79 @@ The difficulty in running a BFT protocol, as proposed in Chapter~\ref{ch:BFT} in
 
 In ByzCoin, nodes must solve a Proof of work puzzle to become a node on the BFT system. ByzCoin applies a fixed window size. A node added with one PoW solution will be removed after the end of this window. We note that in ByzCoin, nodes are not equal. Instead every node has a \emph{voting power} relative to the number of PoW puzzles he submitted in the current window. Thus, instead requiring a certificate with signatures from $\frac{2}{3}$ of the nodes, ByzCoin requires signatures from nodes, that together hold $\frac{2}{3}$ of the voting Power in the current window.
 
+
+\begin{example}
+The following shows an example of the window and voting power in ByzCoin.
+	
+\begin{figure}[h!]
+	\input{fig/hybrid-byzcoin}
+	\caption{ByzCoin:An example for the Byzcoin sliding window. Nodes that have mined a block within the window get to sign the certificate for the new block ($i$) mined by y. Including $i$ we move to $\text{window}_i$}
+	\label{fig:byzcoin}
+\end{figure}
+
+\begin{table}[h!]
+	
+	\centering
+	\begin{tabular}{| r | c | c |}
+		\hline
+		node &  \parbox[t]{2.5cm}{voting power\\ in window\\} & \parbox[t]{2.5cm}{voting power\\ in $\text{window}_i$\\}\\
+		\hline
+		a & 3 & 2 \\ 
+		b & 1 & 1 \\
+		c & 2 & 2 \\
+		x & 1 & 1 \\
+		y & 0 & 1 \\
+		\hline
+	\end{tabular}
+	\caption{Table showing voting power for Figure~\ref{fig:byzcoin}.}
+\end{table}
+
+\noindent
+Note that when voting for block $i$ nodes a and c together hold $2/3$ of the voting power. This is no longer the case in $\text{window}_i$.
+\end{example}
+
 Casper FFG on the other hand, requires nodes participating in the BFT protocol to deposit "Stake", i.e. Ether. A node depositing above a minimum of Ether may participate in the BFT protocol. Again, a node has a \emph{voting power} representing the fraction of the total "Stake".
 Casper FFG uses Proof of Work to avoid the leader election problem. I.e. proposed blocks need to contain a proof of work. This limits the number of blocks that can be proposed concurrently.
+
+
+\begin{example}
+Figure~\ref{fig:casperFFG} shows an example of a blockchain using Casper-FFG. 
+The committed blocks include transactions $t_1$ to $t_5$, where different stakeholders have deposited stake to obtain voting power. 
+Note that:
+\begin{itemize}
+	\item Not every block must include a transaction depositing stake.
+	\item One block could also include multiple transaction depositing stake.
+\end{itemize}
+Table~\ref{tab:casper} shows the stake deposited, that is relevant for voting on the three batched blocks shown in Figure~\ref{fig:casperFFG}.
+Note that $t_6$ is not included. That is because the block was not yet confirmed by the BFT algorithm.\\
+\noindent
+Table~\ref{tab:casper} shows that node a holds $\frac{2}{7}$ of the voting power. 
+
+\begin{figure}[h!]
+	\input{fig/hybrid-casperFFG}
+	\caption{A blockchain showing transactions that deposit stake.}
+	\label{fig:casperFFG}
+\end{figure}
+
+\begin{table}[h!]
+	
+	\centering
+	\begin{tabular}{| r | c | c |}
+		\hline
+		transaction & \parbox[t]{2.5cm}{deposited stake\\} & \parbox[t]{2.5cm}{submitted by}\\
+		\hline
+		$t_1$ & 2 eth & a \\ 
+		$t_2$ & 2 eth & b \\
+		$t_3$ & 1 eth & c \\
+		$t_4$ & 1 eth & d \\
+		$t_5$ & 1 eth & e \\
+		\hline
+		total & 7 eth &  \\
+		\hline
+		
+	\end{tabular}
+	\caption{Table showing voting power for Figure~\ref{fig:casperFFG}.}
+	\label{tab:casper}
+\end{table}	
+\end{example}
+	
