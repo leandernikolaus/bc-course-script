@@ -186,7 +186,7 @@ For extended details on this attack, see \href{https://scalingbitcoin.org/zh_HAN
 \end{note}
 
 \subsection{Sybil attack}
-In the eclipse attack, we assume that an attacker controls many IP addresses and machines, e.g. a botnet. 
+In the sybil attack, we assume that an attacker controls many IP addresses and machines, e.g. a botnet. 
 
 \begin{definition}
 	An attacker performing a \emph{sybil attack} registers multiple peers to receive as many connections as possible. Additionally, he may spread false network addresses. 
@@ -203,11 +203,11 @@ A successful attack has the following \textbf{effect:}
 \end{itemize}
 \end{note}
 
-\begin{idea} An interesting idea would be to select peers among the nodes that have previously published a block.
-\end{idea}
-\begin{note}
-Using the idea above it is more difficult to introduce sybils. However, this would undo the anonymity of minors. Further, there is a bootstrapping problem.
-\end{note}
+% \begin{idea} An interesting idea would be to select peers among the nodes that have previously published a block.
+% \end{idea}
+% \begin{note}
+% Using the idea above it is more difficult to introduce sybils. However, this would undo the anonymity of miners. Further, there is a bootstrapping problem.
+% \end{note}
 
 \section{Attacks on transactions}
 It is possible to issue two transactions that both spend the same outputs.

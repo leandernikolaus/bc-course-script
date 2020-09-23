@@ -20,6 +20,9 @@ However, based on a timeout, nodes can hop over one depth.
 		\State{$\depth=1$}
 		\State{$timer=\text{start}()$}
 		\On{receive $b$ from $\textrm{leader}(\depth)$}
+			\If{$b.\just.\depth > \lock.\depth$}
+				\State{$\lock=b.\just$}
+			\EndIf
 			\If{$b.\depth=\depth$ and $b$ descendant of \lock}
 				\State{$\text{sign}(b)$}
 				\State{$\depth++$}

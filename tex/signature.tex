@@ -18,6 +18,16 @@ A verify function takes a message $m$, signature $\sigma$ and the public key $pk
 
 Bitcoin currently uses ECDSA signatures, i.e. signatures where the public key is a point on an elliptic curve.
 
+\begin{example}
+One example for digital signatures is https certificates and the establishment of a TLS session.
+These certify that a given public key belongs to a certain domain.
+They are signed by a Certificate authority. 
+The public key of the certificate authority is typically already included in your browser installation.
+
+The binding of a public key to a specific entity (e.g. web-domain) is called 
+\emph{public key infrastructure} (PKI).
+\end{example}
+
 \section{Account balances and UTXO}
 The most prominent use case for blockchains is currently digital currency. 
 We now spend some time to look at how to implement money transfer. 
@@ -32,35 +42,43 @@ We now spend some time to look at how to implement money transfer.
 Idea~\ref{idea-pk} allows to avoid the use of \emph{public key infrastructure} (PKI), that is otherwise used to bind public keys to identities.
 \end{note}
 
-\textbf{Algorithm~\ref{alg:bank}} show a simple bank that maintains balances.
+\textbf{Algorithm~\ref{alg:bank}} shows a simple bank that maintains balances.
+For every public-key, the bank stores one balance.
 The algorithm has two transactions, \textsc{Create} creates new balances.
-\textsc{Transfer} allows to transfer money from one account to another.
+\textsc{Transfer} allows to transfer money from one account (\textit{pk-from}) to another (\textit{pk-to}.
 The algorithm assumes that balances that have not been initialized have the value 0.
 
 
-\textbf{Authentication} of transactions poses a problem:
+\paragraph{Authentication} of transactions poses a problem:
 \begin{itemize}
 	\item For \textsc{Create} transactions we assume that they are are only valid during setup of the system.
-	\item For \textsc{Transfer} transactions it is desired that all transactions can be submitted by users. E.g. if balances are identified with a public key, we could require transactions to be signed by the owner of \textit{pk-from}.
+	\item For \textsc{Transfer} transactions it is desired that all transactions can be submitted by users. To authenticate the sender, the transaction includes a signature $\sigma$.
+	In Line~\ref{line:if} we therefore check that the sender \textit{pk-from} signed the transaction.
 \end{itemize}
 
 \noindent
 A bank based on Algorithm~\ref{alg:bank} may be susceptible to \textbf{replay attacks}. A \textsc{Transfer} transaction signed by \textit{pk-from} may be submitted multiple times, given that the account of \textit{pk-from} has sufficient fonds. This will result in additional fonds transferred to \textit{pk-to}.
 
+Later, we will see, how replay attacks in this account based model can be avoided using a counter/sequence number for each account.
+
+
 \begin{algorithm}[ht!]
 	\caption{Simple Bank using account balances}
 	\label{alg:bank}
-	\begin{algorithmic}
+	\begin{algorithmic}[1]
 		\State{$balances :=[pk]\textnormal{uint}$}
 		\Procedure{Create}{$value, pk$}
 			
 				\State{$balances[pk] += value$}
 			
 		\EndProcedure
-		\Procedure{Transfer}{$value, \textit{pk-from}, \textit{pk-to}$}
-			\If{$balances[\textit{pk-from}] > value$ }
-				\State{$balances[\textit{pk-from}] -= value$}
-				\State{$balances[\textit{pk-to}] += value$}
+		\Procedure{Transfer}{$value, \textit{pk-from}, \textit{pk-to}, \sigma$}
+			\If{\label{line:if} $\text{verify}(m, \mathit{pk-from}, \sigma)$} 
+			\Comment{$m=value||\textit{pk-from}||\textit{pk-to}$}
+ 				\If{$balances[\textit{pk-from}] > value$ }
+					\State{$balances[\textit{pk-from}] -= value$}
+					\State{$balances[\textit{pk-to}] += value$}
+				\EndIf
 			\EndIf
 		\EndProcedure
 	\end{algorithmic}
@@ -69,20 +87,29 @@ A bank based on Algorithm~\ref{alg:bank} may be susceptible to \textbf{replay at
 \question{How could you implement this bank using a blockchain?}
 
 \begin{note}
+\begin{itemize}
+	\item[+] Transfer transaction can be submitted by a sender without the receiver being online.
+	\item[-] It is possible to (accidentally) send money to a public key that does not exist, i.e. that nobody knows the private key for. 
+\end{itemize}
+\end{note}
+
+\paragraph{Who runs the bank?}
 In a centralized system, a trusted party could process transactions, compute balances and distribute balances to all parties. 
 
 Without a trusted party, it is necessary that transactions are distributed to everybody. Every party can then deterministically compute the balances.
 
-One problem in this model is how to role back transactions.
-\end{note}
+\emph{If all participants get all transactions, they can each process them individually and arrive at the same balances.}
+
 
 \subsection{UTXO}
-We now explain the \emph{unspent transaction output} (UTXO) model. 
+Bitcoin does not use balances. Instead it uses the 
+\emph{unspent transaction output} (UTXO) model. We now explain this model:
 
 \begin{idea}[UTXO]
-The main idea behind the \emph{UTXO} model is that, given a record of transactions, validating that a certain balance is greater than $value$ is the same as verifying that this account has received $value$ funds that have not been spend yet.
+In the UTXO model, instead of storing a balance for each private key, we store for every coin, which private key it belongs to. 
+This is complicated a bit, since we want to be able to split and merge coins.
 
-Note that it is usually not necessary to look at all transactions received by the sender, but only a subset. The \emph{UTXO} model allows the transaction to specify the subset we should look at.
+Therefore, instead of individual coins, we store unspent transaction outputs, i.e. money received and not yet spend.
 \end{idea}
 
 \begin{definition}
@@ -144,6 +171,12 @@ Note that it is usually not necessary to look at all transactions received by th
 	\end{algorithmic}
 \end{algorithm}
 
+\begin{example}
+Alice's public key has two unspent outputs with value 1\$ and 1.5\$. Alice wants to send 2\$ to Bob.
+To do that, Alice can create a transaction that has her two outputs as input 
+and creates two outputs, one with value 2\$ and Bobs public key. One with value 0.5\$ and Alices public key.
+\end{example}
+
 
 \begin{definition}
 A \emph{double-spend} is a situation where multiple transactions attempt to spend the same output. 	
@@ -152,20 +185,21 @@ A \emph{double-spend} is a situation where multiple transactions attempt to spen
 Note that according to Algorithm~\ref{alg:transact} only one of double-spend transactions can be validated. 
 \end{note}
 
-\pagebreak
+% \pagebreak
 
 
 \begin{example}
 	\label{ex:P2PKH}
-	The most common examples for arguments necessary to claim a transaction output are listed here. In Bitcoin they are expressed in a stack based scripting language.
+	The following are the most common examples for arguments necessary to claim a transaction output. In Bitcoin they are expressed in a stack based scripting language.
 	\begin{enumerate}[label=\alph*)]
 		\item A signature that matches a certain public key.
 		\item A public key that hashes to a certain value and a signature that matches this key. (Pay to public key hash or P2PKH).
 		\item Multiple signatures that match a sequence of public keys. (Multisig)
-		\item Multiple signatures that match $m$ out of $n$ provided public keys.
+		\item $m$ signatures that match $m$ out of $n$ provided public keys. 
+		E.g. 2 signatures from 2 out of 3 specified public keys.
 		\item A script that hashes to a certain value and an argument that causes this script to evaluate to true. (pay to script hash)
 	\end{enumerate}
-	See \href{https://github.com/bitcoinbook/bitcoinbook/blob/develop/ch06.asciidoc#P2PubKHash1}{here} and \href{https://github.com/bitcoinbook/bitcoinbook/blob/develop/ch06.asciidoc#scriptSig_and_scriptPubKey}{here} for explanation of P2PKH script.
+	See \href{https://github.com/bitcoinbook/bitcoinbook/blob/develop/ch06.asciidoc#script-construction-lock--unlock}{Mastering Bitcoin book, Chapter 6, Script Contruction}  and \href{https://d28rh4a8wq0iu5.cloudfront.net/bitcointech/readings/princeton_bitcoin_book.pdf}{Book: Bitcoin and Cryptocurrency Technologies, Chapter~3.2} for explanation of P2PKH script.
 \end{example}
 
 \begin{note}
@@ -176,13 +210,16 @@ If variant b) is used instead of variant a) from Example~\ref{ex:P2PKH} this may
 
 \comment{On blackboard, give example of P2PKH script.}
 
+P2PKH makes it possible to pay to the hash of a public key.
+This gives rise to the concept of an address.
+
 \begin{definition} An \textbf{address} is either a public key or the hash of a public key. Given the address of a user, it is possible to transfer funds to this user, i.e. create an output that this user can claim by providing a correct signature.
 \end{definition}
 
 \begin{note}
 Bitcoin and many other cryptocurrencies use Base-58 encoding. This encoding uses small and large letters (a to z) and numbers, omitting 0 (number zero), O (capital o), l (lower L) and I (capital i) because of their ambiguity.
 
-Bitcoin addresses use Base58Check encoding adds a 4 byte checksum before Base-58 encoding, to protect against typos, ...
+Bitcoin addresses use Base58Check encoding which adds a 4 byte checksum before Base-58 encoding, to protect against typos, ...
 \end{note}
 
 

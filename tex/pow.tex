@@ -1,16 +1,22 @@
 %!TEX root = ../main.tex
 
 In this chapter we discuss how the Transactions, introduced in 
-Chapter~\ref{ch:transaction} are included in a block in the hash-chain,
+Chapter~\ref{ch:transactions} are included in a block in the hash-chain,
 introduced in Chapter~\ref{ch:hashchain}.
+
+In Chapter~\ref{ch:transactions} we said that all transactions are broadcast, validated and applied by every node. However applying transactions in different order may cause the system to diverge.
 
 \section{Centralized straw-man system}
 We present a straw man solution that relies on a centralized leader to include transactions into a block and issue those blocks. 
 After discussing difficulties with this approach, we present the proof of work based scheme used in bitcoin.
 
-As shown in Figure~\ref{fig:leader}, we assume a single leader. Transactions are submitted to the leader and included in a block.
+As shown in Figure~\ref{fig:leader}, 
+We assume a single leader exists. Transactions are submitted to the leader.
+At regular intervals, the leader includes all new (and valid) transactions in a merkle tree. The root of the merkle-tree is included in a new block.
+
 The block is then broadcast to all participating nodes, who validate it.
-\emph{The validation of blocks prevents the leader from including malformed transactions}, however this system still opens several ways for the leader to misbehave:
+\emph{The validation of blocks prevents the leader from including malformed transactions}. 
+However this system still opens several ways for the leader to misbehave:
 \begin{enumerate}[label=\Alph*)]
 	\item The leader can omit certain transactions on purpose. (Censorship)
 	\item The leader is a single point of failure.
@@ -18,14 +24,17 @@ The block is then broadcast to all participating nodes, who validate it.
 \end{enumerate}
 \comment{If bitcoin would have a leader, some agency would have shut it down long ago.}
 
+
+
 \begin{figure}
 	\includegraphics{fig/Leader}
-	\caption{Straw-man system with leader}
+	\caption{Straw-man system with leader. Payer submits transaction to the leader. The payee will eventually find the transaction in a block and know he was payed.}
 	\label{fig:leader}
 \end{figure}
 
 \pagebreak
 \section{PoW function}
+Before we can discuss, how bitcoin avoids a single leader, we have to learn about PoW functions.
 
 \begin{definition}\label{def:pow1}
 	(PoW function version 1)
@@ -46,7 +55,7 @@ The block is then broadcast to all participating nodes, who validate it.
 	\emph{solves} the proof of work.
 \end{note}
 
-The following is an important conclusion. It follows since the result of hashing one data item is independent from hashing another data item.
+Lemma~\ref{lem:independent} below is an important conclusion. It follows since the result of hashing one data item is independent from hashing another data item.
 
 \begin{lem}\label{lem:independent}
 	Given two $nonces$, chosen at random. 
@@ -68,7 +77,12 @@ For proof see \href{https://cut-the-knot.org/Probability/LengthToFirstSuccess.sh
 \question{Assume for $d=11$ the expected time until success is 7 minutes. What is the expected time until success for $d=10$ and $d=12$?}
 
 \begin{note}
-Using version 1 of the proof of work function, adjusting $d$ the difficulty of the proof of work can only be doubled or halved.
+Using version 1 of the proof of work function, adjusting $d$ the difficulty of the proof of work can only be doubled or halved. 
+\begin{itemize}
+	\item If $d=1$, on average, one out of 2 nonces gives a solution.
+	\item If $d=2$, on average, one out of 4 nonces gives a solution.
+	\item If $d=3$, on average, one out of $8=2^3$ nonces gives a solution.
+\end{itemize}
 \end{note}
 
 \begin{definition}\label{def:pow}
@@ -92,14 +106,25 @@ Using version 1 of the proof of work function, adjusting $d$ the difficulty of t
 
 \begin{note}
 	The proof of work function from Definition~\ref{def:pow} allows to carefully adjust the difficulty $d$ to achieve a certain expected time.
+	\begin{itemize}
+		\item If $d=80 000 ...$ with 31 zeros, then one out of 2 nonces gives a solution.
+		\item If $d= 60 000 ...$ with 31 zeros, then one out of 3 nonces gives a solution.
+	\end{itemize}
 \end{note}
+
 
 \section{Block creation with PoW}
 
 \begin{idea}
 	The idea behind block creation using PoW is to require that any block published includes a nonce, s.t. the block hash and nonce are results of a PoW function.
 	
-	We then allow every node to publish a block, if it can find a valid proof of work.
+	We can thus allow every node to publish a block as outlined below.
+	\begin{itemize}
+		\item Transactions are broadcast to all nodes.
+		\item All nodes (miners) try to create a new block including new valid transactions. 
+		\item A newly created block is broadcast to all nodes.
+		\item Nodes verify the new block, add it to their state and then start trying to create the next one.
+	\end{itemize}
 \end{idea}
 
 \begin{definition}
@@ -112,11 +137,12 @@ A \emph{proof of work blockchain} is a blockchain as in Definition~\ref{def:bc} 
 	\label{fig:leader}
 \end{figure}
 
+This design give the following properties:
 \begin{description}
 	\item[Censorship] An adversary cannot prevent a node, it does not control from including a certain transaction.
 	\item[Failures] Failure of individual nodes will not prevent the system from running.
-	\item[Frequency] PoW difficulty can be adjusted, to ensure that a block is broadcast to everybody, before the next block arrives.
-	\item[Conflicting blocks] For a single entity to create two different blocks at requires to solve PoW twice. This makes it difficult to publish two conflicting blocks.
+	\item[Frequency] A high PoW difficulty ensures that blocks cannot be created faster than they can be distributed to members in the network.
+	\item[Conflicting blocks] For a single entity to create two different blocks requires to solve PoW twice. This makes it difficult to publish two conflicting blocks.
 	A high difficulty decreases the probability that two blocks are found concurrently.
 \end{description}
 
@@ -156,6 +182,30 @@ From Theorem~\ref{thm:bernoullitrials} it follows that $E[T] = \frac{1}{p}$.
 If we assume $E[T]= 10 \text{min} = 600$ we get $p=\frac{1}{600}$.
 \end{proof}
 
+\begin{lem}
+	Assume the current average block interval is $\Delta_1$. To adjust the average block interval to $\Delta_2$, we need to adjust difficulty from $d_1$ to
+	\[
+	d_2 := \frac{\Delta_1}{\Delta_2}\cdot d_1
+	\]
+	
+\end{lem}
+
+\begin{example}
+	If the measured average delay or the last blocks is $5$ minutes and the desired delay is $10$ minutes you have to make PoW more difficulty (2 times). This is done by decreasing the target value $d$ by $0.5$.
+	\[
+		d_2 := \frac{d_1}{2}
+	\]
+	
+\end{example}
+
+\begin{example}
+	If the measured average delay or the last blocks is $6$ minutes and the desired delay is $10$ minutes you have to adjust difficulty by
+	\[
+		d_2 := \frac{6}{10}d_1
+	\]
+	
+\end{example}
+
 \question{What is the probability that a block is found in:
 \begin{itemize}
 	\item Less than 3 minutes?
@@ -167,6 +217,7 @@ If we assume $E[T]= 10 \text{min} = 600$ we get $p=\frac{1}{600}$.
 Why is the probability for less than 10 minutes not 0.5?
 }
 
+
 \subsection{Fees and mining rewards}
 Fees and mining rewards give an incentive to solve the PoW function.
 
@@ -175,7 +226,7 @@ When the sum of outputs of a transaction is larger than the sum of inputs, the d
 \end{definition}
 
 \begin{definition}
- Every block in bitcoin contains a \emph{coinbase transaction}. This transaction has no input and a single output. The output value is the sum of a fixed reward (\emph{mining reward}) and the sum of all fees of transactions included in the block.
+Every block in bitcoin contains a \emph{coinbase transaction}. This transaction has no input and a single output. The output value is the sum of a fixed reward (\emph{mining reward}) and the sum of all fees of transactions included in the block.
 \end{definition}
 
 \begin{note} There are different \textbf{pro's and con's for fixed rewards and fees:}
@@ -183,6 +234,9 @@ When the sum of outputs of a transaction is larger than the sum of inputs, the d
 		\item In bitcoin the mining reward is halved every 4 years. Thus, only a finite amount of bitcoin will ever be created.
 		\item The mining reward allows cheap transactions, since fees do not need to cover full mining expenses.
 		\item Some research suggests, that if mining rewards are small compared to fees, mining becomes unstable.\footnote{\url{https://freedom-to-tinker.com/2016/10/21/bitcoin-is-unstable-without-the-block-reward/}}
+		\begin{itemize}
+			\item Miners may fight over transactions with big fees.
+		\end{itemize}
 		\item Mining awards are necessary to get money into circulation.
 		\item Currently in bitcoin mining rewards are 12.5 bitcoin, while fees per block are less than 1 bitcoin.
 	\end{itemize}
