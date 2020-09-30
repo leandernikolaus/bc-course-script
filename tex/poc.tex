@@ -6,6 +6,7 @@ Unpermissioned blockchains require that published blocks carry a nonce that caus
 \begin{enumerate}
 	\item \textbf{Publishing rate:} Requiring a proof of work ensures that blocks are published at a limited rate. This ensures that, whp., a block is propagated throughout the network, before the next block is published.
 	\item \textbf{Fork probability:} If, while a block is propagated throughout the network, another block is published, these blocks create a fork and put the system in an undecided state. Proof of work ensures that the probability that two blocks are found concurrently is small. 
+	\item \textbf{Detectable system split:} If a subset of the network and miners of a PoW blockchain splits of, to form their own chain, you can detect that by the drop in block rate, since the smaller network will not be able to solve PoW at the same rate.
 \end{enumerate}
 
 In a permissioned system, similar guarantees can be achieved using a certificate.
@@ -25,5 +26,6 @@ A certificate contains signatures from more than $N\cdot\frac{2}{3}$ different n
 	\begin{enumerate}
 		\item \textbf{Publishing rate:} To publish a block with certificate, this block has to be transmitted, validated and signed by at least $c_{min}$ nodes. Thus, blocks cannot be published faster, than (most) of the nodes can validate them.
 		\item \textbf{Fork probability:} If less than $\frac{N}{3}$ nodes signed multiple conflicting blocks, no two conflicting blocks can both receive a certificate.
-	\end{enumerate}
+		\item \textbf{Prevent system split:} If a subset of the nodes are split of from the main network, they will not be able to create any certificates.
+ 	\end{enumerate}
 \end{idea}
