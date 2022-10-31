@@ -39,19 +39,37 @@ For Termination liveness to hold, it is necessary that a sequence of blocks is p
 \section{Hybrid BFT}
 Several blockchain systems propose to use concepts from permissioned BFT to improve Termination and Agreement properties of unpermissioned blockchains. 
 
+There are two goals:
+\begin{itemize}
+	\item \textbf{Non-probabilistic termination}: The question is how to get a non-probabilistic termination guarantee, like termination safety in BFT instead of probabilistic termination guarantee.
+	\item \textbf{Confirmation time:} Probably the main goal for hybrid blockchains is to reduce confirmation time. In Bitcoin, people wait for about 1h for a transaction to be confirmed. On the other hand, in HotStuff, the three blocks needed to confirm a transaction can be broadcast and signed within seconds.
+\end{itemize}
+
 \paragraph{Resources}
 \begin{description}
 	\item[ \href{https://www.usenix.org/conference/usenixsecurity16/technical-sessions/presentation/kogias}{ByzCoin}] is a research system from EPFL that builds BFT on top of a proof of work blockchain.
 	\item[\href{https://arxiv.org/pdf/1710.09437.pdf}{Casper FFG}] is a proposal to add a BFT based system, also utilizing Proof of Stake, on top of Proof of Work in Ethereum, to ensure non-probabilistic termination. 
 \end{description}
 
+\subsection{ByzCoin}
+
+\noindent
 The difficulty in running a BFT protocol, as proposed in Chapter~\ref{ch:BFT} in an unpermissioned setting is to identify the set of nodes and avoid sybil attacks. Proof of Work or Proof of Stake can be used for this purpose.
 
-In ByzCoin, nodes must solve a Proof of work puzzle to become a node on the BFT system. ByzCoin applies a fixed window size. A node added with one PoW solution will be removed after the end of this window. We note that in ByzCoin, nodes are not equal. Instead every node has a \emph{voting power} relative to the number of PoW puzzles he submitted in the current window. Thus, instead requiring a certificate with signatures from $\frac{2}{3}$ of the nodes, ByzCoin requires signatures from nodes, that together hold $\frac{2}{3}$ of the voting Power in the current window.
+In ByzCoin builds on Bitcoin-NG, but instead of just the leader signing microblocks, ByzCoin requires microblocks to be confirmed using a BFT protocol, i.e. collects a certificate for microblocks.
 
+In ByzCoin the nodes running the BFT protocol and signing the microblocks are also determined by key-blocks.ByzCoin uses a fixed window size. The finders of the last $\Delta$ key-blocks participate in the BFT protocol.
+We note that in ByzCoin, nodes are not equal. Instead every node has a \emph{voting power} relative to the number of PoW puzzles (key-blocks) he submitted in the current window. Thus, instead requiring a certificate with signatures from $\frac{2}{3}$ of the nodes, ByzCoin requires signatures from nodes, that together hold $\frac{2}{3}$ of the voting Power in the current window.
+
+\begin{note}
+	\begin{itemize}
+		\item Using a sliding window ensures that nodes that become inactive are removed from the BFT protocol.
+		\item Forks present a problem, since they give disagreement who is participating. This can be solved by requiring that a key-block is confirmed by $\delta$ (e.g. $\delta=6$) other key-blocks, before the issue is included in the window.
+	\end{itemize}
+\end{note}
 
 \begin{example}
-The following shows an example of the window and voting power in ByzCoin.
+Figure~\ref{fig:byzcoin} shows an example of the window and voting power in ByzCoin.
 	
 \begin{figure}[h!]
 	\input{fig/hybrid-byzcoin}
@@ -80,7 +98,10 @@ The following shows an example of the window and voting power in ByzCoin.
 Note that when voting for block $i$ nodes a and c together hold $2/3$ of the voting power. This is no longer the case in $\text{window}_i$.
 \end{example}
 
-Casper FFG on the other hand, requires nodes participating in the BFT protocol to deposit "Stake", i.e. Ether. A node depositing above a minimum of Ether may participate in the BFT protocol. Again, a node has a \emph{voting power} representing the fraction of the total "Stake".
+\pagebreak
+
+\subsection{Casper FFG}
+Casper FFG, requires nodes participating in the BFT protocol to deposit "Stake", i.e. Ether. A node depositing above a minimum of Ether may participate in the BFT protocol. Again, a node has a \emph{voting power} representing the fraction of the total "Stake".
 Casper FFG uses Proof of Work to avoid the leader election problem. I.e. proposed blocks need to contain a proof of work. This limits the number of blocks that can be proposed concurrently.
 
 
@@ -91,6 +112,7 @@ Note that:
 \begin{itemize}
 	\item Not every block must include a transaction depositing stake.
 	\item One block could also include multiple transaction depositing stake.
+	\item Stake is usually deposited for a fixed time, e.g. only for the confirmation of the next 100 blocks.
 \end{itemize}
 Table~\ref{tab:casper} shows the stake deposited, that is relevant for voting on the three batched blocks shown in Figure~\ref{fig:casperFFG}.
 Note that $t_6$ is not included. That is because the block was not yet confirmed by the BFT algorithm.\\
@@ -124,4 +146,27 @@ Table~\ref{tab:casper} shows that node a holds $\frac{2}{7}$ of the voting power
 	\label{tab:casper}
 \end{table}	
 \end{example}
-	
+
+\section{Algorand}
+
+\href{https://dl.acm.org/doi/10.1145/3132747.3132757}{Algorand} is a hybrid blockchain that combines Proof of Stake with BFT.
+
+Voting share is computed similar to Casper FFG.
+The main difference is that Algorand does not rely on Proof of Work for leader election. Algorand uses Verifyable random functions for leader election. 
+Below we present a simplified variant:
+
+\begin{enumerate}
+	\item Every block contains a $nonce$.
+	\item To check if a node is leader for block $i$ he checks the following inequality:
+	\[
+		H(\text{Sign}_{pk}(nonce_{i-1}))< \text{stake}\cdot d
+	\]
+	Where $d$ is a fixed difficulty, stake is a factor, adjusting the difficulty based on a nodes stake or voting power. $\text{Sign}_{pk}(nonce_{i-1})$ is a signature of the previous nonce, with a nodes public key.
+	\item If a node is a leader, he creates a new block, including 
+	\[
+		nonce_i = H(\text{Sign}_{pk}(nonce_{i-1}))
+	\]
+	\item Instead of waiting for just one proposed block, nodes wait for time $\Delta$ and several proposed blocks. They then sign the proposed block with the smallest $nonce$.
+\end{enumerate}
+
+To further improve scalability, Algorand uses the same mechanism used to select a leader, to select a committee, and requires only nodes in the committee to sign the certificate. 

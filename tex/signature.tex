@@ -61,7 +61,6 @@ A bank based on Algorithm~\ref{alg:bank} may be susceptible to \textbf{replay at
 
 Later, we will see, how replay attacks in this account based model can be avoided using a counter/sequence number for each account.
 
-
 \begin{algorithm}[ht!]
 	\caption{Simple Bank using account balances}
 	\label{alg:bank}
@@ -83,6 +82,8 @@ Later, we will see, how replay attacks in this account based model can be avoide
 		\EndProcedure
 	\end{algorithmic}
 \end{algorithm}
+
+
 
 \question{How could you implement this bank using a blockchain?}
 
@@ -131,7 +132,7 @@ Therefore, instead of individual coins, we store unspent transaction outputs, i.
 		\item Algorithm~\ref{alg:transact} shows how a transaction is validated.
 		For a transaction to be valid, \emph{all inputs must be unspent}, input \emph{signatures must validate} and the \emph{sum of input values must be larger than the  output values}.
 		\item Algorithm~\ref{alg:transact} ensures that a transaction can only be validated once and no two valid transactions can spend the same output.
-		\item The different between transaction inputs and outputs is called transaction \emph{fee}.
+		\item The difference between transaction inputs and outputs is called transaction \emph{fee}.
 		\item Example~\ref{ex:P2PKH} gives an example for more complex conditions that may be required to spend an output.
 		\item When the value of inputs is larger than the desired value to be spend, it is common to create an additional output that contains change.
 	\end{itemize}

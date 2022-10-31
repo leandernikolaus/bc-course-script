@@ -40,7 +40,7 @@ The blocks in a hash-chain can be linearly ordered according to the successor re
 \begin{align*}
 	H(b_0) & = H(D_0)\\
 	H(b_1) & = H( H(b_0) || D_1) = H( H(D_0)|| D_1) \\
-	H(b_2) & = H( H(b_1) || D_2) = H( H(D_0)|| D_1) \\
+	H(b_2) & = H( H(b_1) || D_2) = H( H( H(b_0) || D_1)|| D_2) \\
 \end{align*}
 
 \end{note}

@@ -18,6 +18,7 @@ A suitable mining function has the following properties:
 
 
 \subsection{ASIC resistance}
+\label{sec:asic-resistance}
 Asics resistance is motivated by the fact that bitcoin mining is currently done almost exclusively on specialized hardware, i.e. application specific integrated circuits (ASICs). There are currently produced by a single manufacturer, yielding a single point of failure and trust. 
 
 Further, these ASICs are difficult to use for other purposes than mining cryptocurrencies.
@@ -41,11 +42,12 @@ The idea behind proof of useful work, is that energy and hardware used to comput
 \begin{definition} A PoW puzzle is \emph{useful}, if its solution or computation has an application or utility outside of blockchain domain.
 \end{definition}
 
-\begin{note} Proposals for useful PoW are still subject to research. Proposals include:
-	\begin{description}
-		\item[Finding prime numbers]
-		\item[Evaluate small degree polynomials] This can help to determine mathematical problems like vector orthogonality, shortest path problems, ...
-	\end{description}
+\begin{note} Proposals for useful PoW are still subject to research. The main difficulty in using real world problems, i.e. from machine learning or protein folding, is to ensure progress freedome.
+Proposals include:
+	\begin{itemize}
+		\item Finding prime numbers
+		\item Evaluate small degree polynomials: This can help to determine mathematical problems like vector orthogonality, shortest path problems, ...
+	\end{itemize}
 
 Note that while finding problems, e.g. vector orthogonality have applications, it is usually not useful to simply find two random orthogonal vectors. Rather two orthogonal vectors should be found from a given set. 
 
@@ -93,10 +95,52 @@ In PPCoin (Peercoin) a miner identified by \textit{addr}, that has deposited $\m
 
 This constructions gives several \textbf{limitations and problems}. Some of these are common for many PoS schemes.
 \begin{description}
-	\item[Predictability] A miner can predict whether he will be able to mine the next block.
+	\item[Predictability] A miner can predict whether he will be able to mine the next block. He can increase \texttt{timeinseconds} above the current time.
 	\item[PoW next block] A miner with sufficient resources can try to tweak the current block, s.t. he will be able to also mine the next block. 
-	\item[Non deciding] In case of a fork, a miner does not have to decide on which block he wants to mine. It is feasible to mine of both chains. Thus forks may prevail for long.
+	\item[Non deciding] In case of a fork, a miner does not have to decide on which block he wants to mine. It is feasible to mine on both chains. Thus, forks may prevail for long.
 	\item[History rewrite] Theoretically it is feasible to rewrite the complete, or a large part of the history of this chain. 
 \end{description}
-The above problems are not specific to Peercoin, but are also present in other proof of stake solutions.
 \end{example}
+
+In the following we present some mitigations for the above vulnerabilities. In Chapter~\ref{ch:hybrid} we will discuss more advanced techniques to address these issues.
+
+\paragraph*{Predictability}
+To reduce the effect of predictability, it is important that nodes check the timestamp received on blocks created by others, and do not accept blocks published ahead of time.
+
+\paragraph*{PoW next block}
+The ability for this attack significantly depends on what data is included in \texttt{prevBlockHash}.
+If this hash includes transactions, it is possible to change transactions, as in the attack.
+
+A mitigation is to not include the transaction hash in \texttt{prevBlockHash} and instead only use the proof of the last block:
+\[
+	\pi_{i} = H(\pi_{i-1}||addr||\texttt{timeinsecounds})
+\]
+To still provably include the transactions in a block, it is then necessary to rely on signatures.
+
+\paragraph*{Non deciding} 
+The common technique to address this is slashing.
+Slashing is a technique that punishes misbehaving miners.
+The idea is, if some miner provably did work on two forks, then his depositum (stake) is discarded, or given to others.
+
+\paragraph*{History rewrite}
+One technique for this is to include checkpoints, or similar and to not accept new branches, which diverge from the current branch before the checkpoint.
+
+
+\subsection{Fairness}
+Additionally to the above problems, research has shown that PoS, as in Peercoin is more likely to give unfair reward distributions than PoW. This subsection presents results from:
+\href{https://arxiv.org/pdf/2103.14713.pdf}{Huang et al., "Do the rich get richer?", SIGMOD'21.}
+Note that Huang et al. refer to our PoS (Peercoin) as multi-lottery (ML-PoS).
+
+\begin{definition}
+We can say that a reward system is fair, if every Miner/Participants receives rewards proportional to his invested energy or stake.
+However, reward distribution in a PoW or PoS system is probabilistic. Thus, we can consider fairness in two ways:
+\begin{itemize}
+	\item \textbf{Expected fairness} expresses if the reward which a node is expected to receive, or receives over long time is fair.
+	\item \textbf{Fairness variation} or robust fairness expresses the likelihood that the reward actually received deviates from the fair share.
+\end{itemize}
+\end{definition}
+
+
+\begin{theorem}
+According to Huang et al. both PoW and PoS, as in Peercoin have expected fairness, however, the fairness variation in PoS is significantly larger than in PoW.
+\end{theorem}
