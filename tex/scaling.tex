@@ -1,7 +1,15 @@
 %!TEX root = ../main.tex
 
 Bitcoin currently achieves about 7 transactions per second. 
-In this chapter we discuss different approaches to increase this throughput.
+Also, to be sure that a transaction is included, clients wait for 6 blocks, which takes 
+on average 1 hour.
+In this chapter we discuss different approaches to increase this throughput and reduce confirmation latency.
+
+\begin{definition} \textbf{Throughput} of a blockchain is the maximum number of transaction that can be included in the chain per second.
+\end{definition}
+
+\begin{definition} \textbf{Comfirmation latency} of a blockchain is the time it takes from when a transaction is first included in a block, until it can be considered confirmed, and a client can be sure that it will not be removed from the chain.
+\end{definition}
 
 \section{Blocksize and block interval}
 To increase this, it was heavily discussed, wether the blocksize should be increased, or block frequency can be reduced.
@@ -41,9 +49,9 @@ Mining power utilization is related to the security problem above.
 \end{definition}
 
 \subsection{Ghost}
-GHOST is a proposal to avoid the 1. Problem above, namely increased vulnerability to selfish mining and double spend attacks. This is especially relevant to maintain security after reparametrization for increased throughput.
+GHOST is a proposal to avoid the security problem (1.) that may arise with more frequent forks, namely increased vulnerability to selfish mining and double spend attacks. This is especially relevant to maintain security after reparametrization for increased throughput.
 
-\begin{definition} The \emph{Greedy heaviest-observed subtree (GHOST)} rule says, instead of selecting the longest chain the root of the subtree with the most leafs should be selected.	
+\begin{definition} The \emph{Greedy heaviest-observed subtree (GHOST)} rule says, instead of selecting the longest chain the root of the subtree containing most blocks should be selected.	
 \end{definition}
 
 \begin{note}
@@ -55,8 +63,8 @@ GHOST is a proposal to avoid the 1. Problem above, namely increased vulnerabilit
 \end{note}
 
 \subsection{Inclusive chains and uncles}
-Inclusive chains are a possibility to address Problem 2.
-An increased fork probability may result in many blocks being discarded. This results in minors not getting their block rewards. It provides an incentive for miners/nodes to form larger groups, rather than mine individually. 
+Inclusive chains are a possibility to address Problem 2, \textbf{Centralization}.
+An increased fork probability may result in many blocks being discarded. This results in miners not getting their block rewards. It provides an incentive for miners/nodes to form larger groups, rather than mine individually. 
 This is true also when using the GHOST rule.
 
 \begin{definition} The published blocks, both on the longest chain and in other forks, build a \emph{tree}, routed at the genesis block.
@@ -66,8 +74,7 @@ The \emph{previous block hash} $h_{-1}$ pointers point to the parent of a block.
 	In an \emph{inclusive} blockchain, instead of just including the hash of the parent, a block $b_{new}$ can include hashes of another block $b$, if:
 	\begin{itemize}
 		\item $b$ is not an ancestor of $b_{new}$
-		\item the depth of $b$ ($d_b$) (i.e. distance from the genesis block) is less than the depth of $b_{new}$ ($d_{new}$)
-		\item $b$ is a child to one of the ancestors of $b_{new}$.
+		\item the depth of $b$ ($d_b$) (i.e. distance from the genesis block) is less than the depth of $b_{new}$ ($d_{new}$).
 	\end{itemize}
 	Blocks included as additional ancestors are called \emph{uncles.}
 \end{definition}
@@ -84,14 +91,16 @@ In an inclusive blockchain, blocks may receive an \textbf{uncle reward} and \tex
 Ethereum uses uncle blocks. An uncle $b$ is rewarded $1-\frac{(d_{new}-d_b)}{7}$ of the block reward. Thus uncles that are more than 6 blocks behind are not rewarded.
 
 For including an uncle a block creator is rewarded $\frac{1}{32}$ of a block reward.
+
+Ethereum also requires that an uncle  is a child to one of the ancestors of the nephew. Thus, on longer forks, only the first block can be an uncle.
 \end{example}
 
 \begin{note}
 Security and incentives:
 \begin{itemize}
 	\item The possibility to receive a block reward, being not included in the main chain, reduces the urge to form larger mining groups (pools).
-	\item The reward an uncle receives plus the reward for including an uncle is less then the block reward. This should incentivize nodes to try and extend the main chain.
-	\item The reward for uncles is reduces over distance. This disincentivises keeping blocks secret. 
+	\item The reward an uncle receives plus the reward for including an uncle is less than the block reward. This should incentivize nodes to try and extend the main chain.
+	\item The reward for uncles is reduced over distance. This discourages keeping blocks secret. 
 \end{itemize}
 \end{note}
 
@@ -226,7 +235,7 @@ When sharding, the idea is to divide the blockchain into many smaller chains. Ea
 		\item Allow miners to participate in multiple shards, and to publish blocks on multiple shards with a single proof of work. 
 		
 	\end{itemize}
-	Both of these are problematic. In the first, redistribution is reducing the benefit of sharding. The second encourages minors to form pools.
+	Both of these are problematic. In the first, redistribution is reducing the benefit of sharding. The second encourages miners to form pools.
 \end{enumerate}
 
 \end{note}

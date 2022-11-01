@@ -5,7 +5,7 @@ In the Bitcoin protocol, any node can join. Additional any entity can create mul
 This model is called \textbf{unpermissioned}. No permission is needed to participate. 
 
 \section{Unpermissioned systems}
-In an unpermissioned system anyone can join, usually anonymity is provided.
+In an unpermissioned or permissionless system anyone can join, usually anonymity is provided.
 Thus the creation of sybils is usually possible.
 
 To mitigate the existence of sybils, unpermissioned blockchains use Proof of Work or Proof of Stake or similar mechanisms.
@@ -38,7 +38,7 @@ In a permissioned system the central authority prevents sybils.
 
 \begin{example}
 	\begin{enumerate}
-		\item The classical example for a permissioned blockchain is a blockchain run together by a set or organizations. Typically we assume that each organization runs a node. The libra blockchain is an example for this. For libra, a non-profit central organization exists, which is functioning as central authority.
+		\item The classical example for a permissioned blockchain is a blockchain run together by a set of organizations. Typically, we assume that each organization runs a node. The Libra/Diem blockchain is an example for this. For Libra, a non-profit central organization exists, which is functioning as central authority.
 		\item If a single system, run within one organization is running on multiple servers, this also is a permissioned system. The different servers have unique ids and the system administrator functions as central authority.
 		\item A more open example is a system that requires nodes to authenticate with Bank-ID, passport or sharing their social media activity. 
 		Here the central authority is the issuer of Bank-ID, passport or social media.
@@ -91,3 +91,21 @@ For this, every node is assigned a utility function:
 For example the utility of participating in bitcoin mining is the block reward and transaction fees, minus costs for computation and networking, e.g. energy and hardware.
 
 The goal for game theory is to show that nodes cannot increase their utility, by deviating from a protocol, e.g. by deviating from the longest chain rule.
+
+\begin{definition}
+In game theory we assume that agents or players are free to choose from different actions. The set of actions an agent takes are called a \textbf{strategy}.
+\end{definition}
+
+In traditional game theory we assume that games are deterministic, meaning that given a set of strategies, one for every agent, we can determine what will be the utility of every agent.
+
+\begin{definition}
+	A \textbf{Nash-Equilibrium} is a set of strategies, one for every agent, such that no individual agent can improve his utility, by choosing a different strategy.
+\end{definition}
+
+For a protocol it is desirable that for every node to follow the protocol is a Nash-Equilibrium. This means that agents will not profit in utility by deviating from the protocol.
+
+However, note that the notion of Nash-Equilibrium does not exclude the possibility that coalitions may successfully deviate.
+
+\begin{note}
+There exists variants of the Nash-Equilibrium that take into account, e.g. the possibility for small coalitions, the fact that agents may only deviate if it gives a significant benefit, or the fact that a game may be probabilistic.
+\end{note}
